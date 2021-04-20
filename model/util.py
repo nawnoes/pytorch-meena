@@ -24,6 +24,15 @@ def subsequent_mask(size):
   subsequent_mask = np.triu(np.ones(attn_shape), k=1).astype('uint8')
   return torch.from_numpy(subsequent_mask) == 0
 
+"""
+디코더 target mask 생성
+"""
+def make_std_mask(tgt, pad_token_idx = 0):
+  'Create a mask to hide padding and future words.'
+  target_mask = (tgt != pad_token_idx).unsqueeze(-2)
+  target_mask = target_mask & Variable(subsequent_mask(tgt.size(-1)).type_as(target_mask.data))
+  return target_mask.squeeze()
+
 def log(t, eps=1e-9):
     return torch.log(t + eps)
 
