@@ -1,0 +1,16 @@
+{
+  "vocab_path" : "../../data/wiki-vocab.txt",
+  "data_path" :"../../data/wiki/" ,
+  "checkpoint_path" : "../../checkpoints",
+  "model_name": "komeena",
+  "dim": 2560,
+  "encoder_depth": 1,
+  "decoder_depth": 13,
+  "n_head": 32,
+  "max_seq_len" : 128,
+  "batch_size" : 2,
+  "epochs" : 50,
+  "log_steps" : 1,
+  "ckpt_steps" : 500,
+  "gradient_accumulation_steps": 30
+}
