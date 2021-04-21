@@ -1,7 +1,7 @@
 {
-  "vocab_path" : "../../data/wiki-vocab.txt",
-  "data_path" :"../../data/wiki/" ,
-  "checkpoint_path" : "../../checkpoints",
+  "vocab_path" : "../data/vocab-v3.txt",
+  "data_path" :"../data/train/" ,
+  "checkpoint_path" : "../checkpoint",
   "model_name": "komeena",
   "dim": 2560,
   "encoder_depth": 1,
@@ -14,6 +14,6 @@
   "log_steps" : 1,
   "ckpt_steps" : 500,
   "gradient_accumulation_steps": 30,
-  "fp16": true,
+  "fp16": false,
   "fp16_opt_level": "O2"
 }

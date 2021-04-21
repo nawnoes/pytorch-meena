@@ -3,8 +3,8 @@ import warnings
 warnings.filterwarnings("ignore")
 import sys
 
-# sys.path.append('../') # for local
-sys.path.append('/content/drive/My Drive/Colab Notebooks/transformer-electra')  # for colab
+sys.path.append('../') # for local
+# sys.path.append('/content/drive/My Drive/Colab Notebooks/transformer-electra')  # for colab
 
 import torch
 import torch.nn as nn
@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
 from transformers import BertTokenizer
 from transformers.optimization import AdamW
-from apex import amp
+# from apex import amp
 
 import os
 import json
@@ -86,6 +86,7 @@ class MeenaTrainer(object):
     step_loss = 0.0
     start_epoch = 0
     start_step = 0
+    step_perplexity = 0.0
 
     # Load Checkpoint
     if os.path.isfile(f'{self.checkpoint_path}/{self.model_name}.pth'):
@@ -127,6 +128,8 @@ class MeenaTrainer(object):
         output = self.model(inputs, input_mask, labels)
 
         loss = output.loss
+
+        step_perplexity += torch.exp(loss)
         origin_loss = loss.item()
 
         loss = loss / gradient_accumulation_steps  # divide loss into gradient accumulation step
@@ -154,7 +157,7 @@ class MeenaTrainer(object):
 
         if global_steps % log_steps == 0:
           pb.set_postfix_str(
-            f''' Train Loss: {format(step_loss / local_steps, ".4f")} | Steps: {global_steps} | disc_acc: {format(output[4], ".4f")} | disc_loss: {format(output[2], ".4f")} | gen_acc: {format(output[3], ".4f")} | mlm_loss: {format(output[1], ".4f")} ''')
+            f''' Train Loss: {format(step_loss / local_steps, ".4f")} | Steps: {global_steps} | loss: {format(output.loss, ".4f")} | step_perplexity: {format(step_perplexity/local_steps,".4f")}''')
           step_loss = 0.0
           local_steps = 0
 
@@ -181,6 +184,7 @@ class MeenaTrainer(object):
     self.model.eval()
 
     eval_loss = 0.0
+    perplexity = 0.0
     eval_steps = 0
 
     logging.info(f'{datetime.now()} | Evaluating {self.model_name}')
@@ -197,18 +201,21 @@ class MeenaTrainer(object):
         output = self.model(inputs, input_mask, labels)
 
       tmp_eval_loss = output.loss
+      tmp_perplexity = torch.exp(tmp_eval_loss)
 
       if self.n_gpu > 1:
         tmp_eval_loss = tmp_eval_loss.mean()
 
       eval_loss += tmp_eval_loss.item()
+      perplexity += tmp_perplexity.item()
       eval_steps += 1
 
       total_eval_loss = eval_loss / eval_steps
+      total_perplexity = perplexity / eval_steps
 
-      logging.info(f'{datetime.now()} | Step: {step} | Eval Loss: {total_eval_loss}')
+      logging.info(f'{datetime.now()} | Step: {step} | Eval Loss: {total_eval_loss} | Perplexity: {total_perplexity}')
       with open(f'{self.log_dir}/{self.model_name}_eval_results.txt', 'a+') as results_file:
-        results_file.write(f'{datetime.now()} | Step: {step} | Eval Loss: {total_eval_loss}\n')
+        results_file.write(f'{datetime.now()} | Step: {step} | Eval Loss: {total_eval_loss} | Perplexity: {total_perplexity}\n')
         results_file.close()
 
   def save(self, epoch, model, optimizer, scheduler, losses, train_step):
@@ -225,7 +232,8 @@ class MeenaTrainer(object):
 
 def main():
   torch.manual_seed(9)
-  base_path = '/content/drive/My Drive/Colab Notebooks/transformer-electra'
+  # base_path = '/content/drive/My Drive/Colab Notebooks/transformer-electra'
+  base_path = '..'
   # base_path = '/Users/a60058238/Desktop/dev/workspace/transformer-electra'
 
   log_dir = f'{base_path}/logs'
@@ -238,7 +246,7 @@ def main():
   tokenizer = BertTokenizer(vocab_file=config.vocab_path, do_lower_case=False)
 
   # Dataset
-  dataset = DatasetForMeena(tokenizer, config.max_seq_len, path=config.data_path)
+  dataset = DatasetForMeena(tokenizer, config.max_seq_len, config.data_path)
 
   # Meena Model
   model = Meena(
@@ -251,9 +259,7 @@ def main():
     dropout=config.dropout_prob
     )
 
-  # weight tie any other embeddings if available, token type embeddings, etc.
-  model.tie_embedding_weight()
-  model.cuda()
+  # model.cuda()
 
   # Pretraining Traniner
   trainer = MeenaTrainer(dataset, model, tokenizer,

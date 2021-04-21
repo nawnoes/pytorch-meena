@@ -2,6 +2,8 @@ from functools import reduce
 
 from torch.nn import ModuleList
 import torch.nn.functional as F
+from torch.autograd import Variable
+
 import copy
 import math
 import torch
