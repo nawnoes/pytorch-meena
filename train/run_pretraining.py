@@ -12,8 +12,8 @@ from torch.utils.data import DataLoader, random_split
 
 from tqdm import tqdm
 from transformers import BertTokenizer
-from transformers.optimization import AdamW
-# from apex import amp
+from fairseq.optim.adafactor import Adafactor
+from apex import amp
 
 import os
 import json
@@ -75,7 +75,6 @@ class MeenaTrainer(object):
             train_dataloader,
             eval_dataloader,
             optimizer,
-            scheduler,
             log_steps,
             ckpt_steps,
             gradient_accumulation_steps=1):
@@ -98,7 +97,6 @@ class MeenaTrainer(object):
 
       self.model.load_state_dict(checkpoint['model_state_dict'])
       optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-      scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
       amp.load_state_dict(checkpoint['amp'])
 
     self.model.train()
@@ -125,9 +123,9 @@ class MeenaTrainer(object):
           continue
         inputs, input_mask, labels = batch  # _ is input_mask
         inputs, input_mask, labels = inputs.to(self.device), input_mask.to(self.device), labels.to(self.device)
-        output = self.model(inputs, input_mask, labels)
+        output = self.model(inputs, input_mask, labels) # output: lm_logits, loss, encoder_logit, x
 
-        loss = output.loss
+        loss = output[1]
 
         step_perplexity += torch.exp(loss)
         origin_loss = loss.item()
@@ -151,18 +149,18 @@ class MeenaTrainer(object):
           else:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
-          scheduler.step()
           optimizer.step()
           self.model.zero_grad()
 
         if global_steps % log_steps == 0:
           pb.set_postfix_str(
-            f''' Train Loss: {format(step_loss / local_steps, ".4f")} | Steps: {global_steps} | loss: {format(output.loss, ".4f")} | step_perplexity: {format(step_perplexity/local_steps,".4f")}''')
+            f''' Train Loss: {format(step_loss / local_steps, ".4f")} | Steps: {global_steps} | step_perplexity: {format(step_perplexity/local_steps,".4f")}''')
           step_loss = 0.0
           local_steps = 0
+          step_perplexity =0.0
 
         if global_steps % ckpt_steps == 0:
-          self.save(epoch, self.model, optimizer, scheduler, losses, global_steps)
+          self.save(epoch, self.model, optimizer, losses, global_steps)
           logging.info(f'{datetime.now()} | Saved checkpoint to: {self.checkpoint_path}')
           with open(f'{self.log_dir}/{self.model_name}_train_results.json', 'w') as results_file:
             json.dump(losses, results_file)
@@ -173,7 +171,7 @@ class MeenaTrainer(object):
       self.model.train()
       start_step = 0
 
-    self.save(epoch, self.model, optimizer, scheduler, losses, global_steps)
+    self.save(epoch, self.model, optimizer, losses, global_steps)
 
     return self.model
 
@@ -200,7 +198,7 @@ class MeenaTrainer(object):
       with torch.no_grad():
         output = self.model(inputs, input_mask, labels)
 
-      tmp_eval_loss = output.loss
+      tmp_eval_loss = output[1]
       tmp_perplexity = torch.exp(tmp_eval_loss)
 
       if self.n_gpu > 1:
@@ -218,12 +216,11 @@ class MeenaTrainer(object):
         results_file.write(f'{datetime.now()} | Step: {step} | Eval Loss: {total_eval_loss} | Perplexity: {total_perplexity}\n')
         results_file.close()
 
-  def save(self, epoch, model, optimizer, scheduler, losses, train_step):
+  def save(self, epoch, model, optimizer, losses, train_step):
     torch.save({
       'epoch': epoch,  # 현재 학습 epoch
       'model_state_dict': model.state_dict(),  # 모델 저장
       'optimizer_state_dict': optimizer.state_dict(),  # 옵티마이저 저장
-      'scheduler_state_dict': scheduler.state_dict(),  # 스케줄러
       'losses': losses,  # Loss 저장
       'train_step': train_step,  # 현재 진행한 학습
       'amp': amp.state_dict()
@@ -259,7 +256,7 @@ def main():
     dropout=config.dropout_prob
     )
 
-  # model.cuda()
+  model.cuda()
 
   # Pretraining Traniner
   trainer = MeenaTrainer(dataset, model, tokenizer,
@@ -284,25 +281,7 @@ def main():
      'weight_decay': 0.0}
   ]
 
-  learning_rate = 5e-4
-  adam_epsilon = 1e-6
-
-  optimizer = AdamW(optimizer_grouped_parameters,
-                    lr=learning_rate,
-                    eps=adam_epsilon)
-
-  #   scheduler = torch.optim.lr_scheduler.StepLR(optimizer,  # Optimzer
-  #                                               step_size=len(
-  #                                                 train_dataloader) // train_config.gradient_accumulation_steps,
-  #                                               # Gamma 비율로 줄일 스텝사이즈
-  #                                               gamma=0.7)  # lr줄이는 비율
-
-  scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
-                                                  max_lr=5e-3,
-                                                  steps_per_epoch=len(train_dataloader) // config.gradient_accumulation_steps,
-                                                  epochs=config.epochs,
-                                                  pct_start=0.05,
-                                                  anneal_strategy='linear')
+  optimizer = Adafactor(model.parameters())
 
   if config.fp16:
     model, optimizer = amp.initialize(model, optimizer, opt_level=config.fp16_opt_level)
@@ -311,7 +290,6 @@ def main():
                 train_dataloader=train_dataloader,
                 eval_dataloader=eval_dataloader,
                 optimizer=optimizer,
-                scheduler=scheduler,
                 log_steps=config.log_steps,
                 ckpt_steps=config.ckpt_steps,
                 gradient_accumulation_steps=config.gradient_accumulation_steps)

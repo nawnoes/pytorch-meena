@@ -70,5 +70,5 @@ class Meena(nn.Module):
       loss_fct = CrossEntropyLoss(ignore_index=0)
       loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
-    return MeenaOutput(lm_logits, loss, encoder_logit, x)
+    return lm_logits, loss, encoder_logit, x
 
