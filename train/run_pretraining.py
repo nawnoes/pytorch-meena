@@ -12,7 +12,6 @@ from torch.utils.data import DataLoader, random_split
 
 from tqdm import tqdm
 from transformers import BertTokenizer
-from transformers import
 from fairseq.optim.adafactor import Adafactor
 from apex import amp
 
@@ -259,6 +258,12 @@ def main():
 
   model.cuda()
 
+  # optimizer = Adafactor(model.parameters())
+  optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=1e-4)
+
+  if config.fp16:
+    model, optimizer = amp.initialize(model, optimizer, opt_level=config.fp16_opt_level)
+
   # Pretraining Traniner
   trainer = MeenaTrainer(dataset, model, tokenizer,
                            model_name=config.model_name,
@@ -271,22 +276,6 @@ def main():
                          )
 
   train_dataloader, eval_dataloader = trainer.build_dataloaders(train_test_split=0.1)
-
-  # Prepare optimizer
-  param_optimizer = list(model.named_parameters())
-  no_decay = ['bias', 'LayerNorm.weight']
-  optimizer_grouped_parameters = [
-    {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
-     'weight_decay': 0.01},
-    {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
-     'weight_decay': 0.0}
-  ]
-
-  # optimizer = Adafactor(model.parameters())
-  optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=1e-3)
-
-  if config.fp16:
-    model, optimizer = amp.initialize(model, optimizer, opt_level=config.fp16_opt_level)
 
   trainer.train(epochs=config.epochs,
                 train_dataloader=train_dataloader,
