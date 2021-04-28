@@ -20,8 +20,6 @@ def self_attention(query, key, value, mask=None):
   attention_score = matmul_result/math.sqrt(d_k)                  # Scale
 
   if mask is not None:
-    if len(mask.shape) ==3:
-      mask = mask.unsqueeze(1)
     attention_score = attention_score.masked_fill(mask == 0, -1e4)
 
   softmax_attention_score = F.softmax(attention_score,dim=-1)  # 어텐션 값

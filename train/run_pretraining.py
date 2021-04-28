@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
 from transformers import BertTokenizer
 from fairseq.optim.adafactor import Adafactor
-from apex import amp
+# from apex import amp
 
 import os
 import json
@@ -97,7 +97,7 @@ class MeenaTrainer(object):
 
       self.model.load_state_dict(checkpoint['model_state_dict'])
       optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-      amp.load_state_dict(checkpoint['amp'])
+      # amp.load_state_dict(checkpoint['amp'])
 
     self.model.train()
     self.model.to(self.device)
@@ -223,7 +223,7 @@ class MeenaTrainer(object):
       'optimizer_state_dict': optimizer.state_dict(),  # 옵티마이저 저장
       'losses': losses,  # Loss 저장
       'train_step': train_step,  # 현재 진행한 학습
-      'amp': amp.state_dict()
+      # 'amp': amp.state_dict()
     }, f'{self.checkpoint_path}/{self.model_name}.pth')
 
 
@@ -256,7 +256,7 @@ def main():
     dropout=config.dropout_prob
     )
 
-  model.cuda()
+  # model.cuda()
 
   # optimizer = Adafactor(model.parameters())
   optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=1e-4)

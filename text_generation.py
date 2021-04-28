@@ -52,7 +52,7 @@ if __name__ =="__main__":
       input_ids = torch.tensor(input_ids).unsqueeze(0)
       inputs_mask = input_ids != 0
 
-      output = model(input_ids, inputs_mask, None)
+      output = model(input_ids, inputs_mask.unsqueeze(1), None)
       pred = output[0]
       next_token_pred = pred.squeeze()[len(tokenized_sentence)]
       top_k_sample = top_k(next_token_pred,9)

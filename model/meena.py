@@ -55,7 +55,6 @@ class Meena(nn.Module):
     encoder_logit = x.clone() # encoder_logit
     target_mask = make_std_mask(input_ids) # target mask 생성
 
-    # TODO 디코더에서 타겟 마스크 전달 시, 어텐션 후 shape이 깨지는 문제 발생
     for decoder in self.decoders:
       x = decoder(x, target_mask)
 

@@ -46,4 +46,4 @@ class DatasetForMeena(Dataset):
     labels = labels.squeeze()
     inputs_mask = inputs != 0
 
-    return inputs, inputs_mask, labels
+    return inputs, inputs_mask.unsqueeze(0), labels

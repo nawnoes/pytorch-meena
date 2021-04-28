@@ -1,7 +1,7 @@
 {
-  "vocab_path" : "./data/vocab-10K.txt",
-  "data_path" :"./data/data-128-10K/" ,
-  "checkpoint_path" : "./checkpoint",
+  "vocab_path" : "../data/vocab-10K.txt",
+  "data_path" :"../data/train/" ,
+  "checkpoint_path" : "../checkpoint",
   "model_name": "komeena",
   "dim": 2560,
   "encoder_depth": 1,
