@@ -21,7 +21,7 @@ if __name__ =="__main__":
     # base_path = '/Users/a60058238/Desktop/dev/workspace/transformer-electra'
 
     log_dir = f'{base_path}/logs'
-    config_path = f'{base_path}/config/meena-config.json'
+    config_path = f'{base_path}/config/meena-config-small.json'
 
     # Config
     config = ModelConfig(config_path=config_path).get_config()
@@ -44,7 +44,7 @@ if __name__ =="__main__":
     model.load_state_dict(checkpoint['model_state_dict'])
     # model.load_state_dict(torch.load(PATH, map_location=torch.device('cpu')))
     model.eval()
-    sent = '사람이 철학적으로 생각하는 것은'
+    sent = '이에 박 시장은 지난 16일 서울시청에서 열린 신년 기자간담회에서'
     padd_token_id = tokenizer.pad_token_id
     tokenized_sentence = tokenizer.encode(sent,add_special_tokens=False)
     while 1:

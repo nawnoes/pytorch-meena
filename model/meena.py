@@ -44,7 +44,7 @@ class Meena(nn.Module):
       nn.Linear(dim, vocab_size)
     )
 
-  def forward(self, input_ids, input_mask, labels):
+  def forward(self, input_ids, input_mask, labels=None):
     x = self.token_emb(input_ids)
     x = x + self.position_emb(input_ids).type_as(x)
 

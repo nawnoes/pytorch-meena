@@ -234,7 +234,7 @@ def main():
   # base_path = '/Users/a60058238/Desktop/dev/workspace/transformer-electra'
 
   log_dir = f'{base_path}/logs'
-  config_path = f'{base_path}/config/meena-config.json'
+  config_path = f'{base_path}/config/meena-config-small.json'
 
   # Config
   config = ModelConfig(config_path=config_path).get_config()
