@@ -53,10 +53,11 @@ class Meena(nn.Module):
     x = self.norm(x)
 
     encoder_logit = x.clone() # encoder_logit
+    # TODO 디코더에서 target_mask upper triangular matrix 수정 후 학습해볼것.
     target_mask = make_std_mask(input_ids) # target mask 생성
 
     for decoder in self.decoders:
-      x = decoder(x, target_mask)
+     x = decoder(x, target_mask)
 
     lm_logits = self.lm_head(x)
 
@@ -67,7 +68,7 @@ class Meena(nn.Module):
       shift_labels = labels[..., 1:].contiguous()
 
       # Flatten the tokens
-      loss_fct = CrossEntropyLoss(ignore_index=0)
+      loss_fct = CrossEntropyLoss()
       loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
     return lm_logits, loss, encoder_logit, x

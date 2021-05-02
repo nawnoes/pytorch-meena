@@ -10,7 +10,7 @@
   "max_seq_len" : 128,
   "dropout_prob": 0.1,
   "batch_size" : 4,
-  "epochs" : 10,
+  "epochs" : 20,
   "log_steps" : 1,
   "ckpt_steps" : 20000,
   "gradient_accumulation_steps": 1,

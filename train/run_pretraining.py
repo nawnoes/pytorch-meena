@@ -119,8 +119,8 @@ class MeenaTrainer(object):
                 bar_format='{l_bar}{bar:10}{r_bar}'
                 )
       for step, batch in pb:
-        if step < start_step:
-          continue
+        # if step < start_step:
+          # continue
         inputs, input_mask, labels = batch  # _ is input_mask
         inputs, input_mask, labels = inputs.to(self.device), input_mask.to(self.device), labels.to(self.device)
         output = self.model(inputs, input_mask, labels) # output: lm_logits, loss, encoder_logit, x
@@ -154,7 +154,7 @@ class MeenaTrainer(object):
 
         if global_steps % log_steps == 0:
           pb.set_postfix_str(
-            f''' Train Loss: {format(step_loss / local_steps, ".4f")} | Steps: {global_steps} | step_perplexity: {format(step_perplexity/local_steps,".4f")}''')
+            f''' Train Loss: {format(step_loss / local_steps, ".4f")} | step_perplexity: {format(step_perplexity/local_steps,".4f")} | Steps: {global_steps}''')
           step_loss = 0.0
           local_steps = 0
           step_perplexity =0.0
@@ -217,6 +217,7 @@ class MeenaTrainer(object):
         results_file.close()
 
   def save(self, epoch, model, optimizer, losses, train_step):
+    model.cpu()
     torch.save({
       'epoch': epoch,  # 현재 학습 epoch
       'model_state_dict': model.state_dict(),  # 모델 저장
@@ -225,6 +226,7 @@ class MeenaTrainer(object):
       'train_step': train_step,  # 현재 진행한 학습
       # 'amp': amp.state_dict()
     }, f'{self.checkpoint_path}/{self.model_name}.pth')
+    model.cuda()
 
 
 def main():
@@ -234,7 +236,7 @@ def main():
   # base_path = '/Users/a60058238/Desktop/dev/workspace/transformer-electra'
 
   log_dir = f'{base_path}/logs'
-  config_path = f'{base_path}/config/meena-config-small.json'
+  config_path = f'{base_path}/config/meena-config.json'
 
   # Config
   config = ModelConfig(config_path=config_path).get_config()
