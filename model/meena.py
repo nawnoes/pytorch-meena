@@ -1,7 +1,7 @@
 from collections import namedtuple
 from torch import nn
 from model.util import clones, make_std_mask
-from model.transformer import PositionalEmbedding,Encoder, Decoder
+from model.transformer import PositionalEmbedding, Encoder, Decoder
 from torch.nn import CrossEntropyLoss
 
 MeenaOutput = namedtuple('MeenaOutput', [
@@ -19,6 +19,8 @@ Meena best performing model use Evolbed Transformer
     - 2560 hidden size
     - 128  max token length 
 """
+
+
 class Meena(nn.Module):
   def __init__(self,
                vocab_size,
@@ -39,10 +41,7 @@ class Meena(nn.Module):
     self.decoders = clones(Decoder(d_model=dim, head_num=head_num, dropout=dropout), decoder_depth)
 
     self.norm = nn.LayerNorm(dim)
-    self.lm_head = nn.Sequential(
-      nn.Linear(dim, dim),
-      nn.Linear(dim, vocab_size)
-    )
+    self.lm_head = nn.Linear(dim, vocab_size, bias=False)
 
   def forward(self, input_ids, input_mask, labels=None):
     x = self.token_emb(input_ids)
@@ -52,12 +51,12 @@ class Meena(nn.Module):
       x = encoder(x, input_mask)
     x = self.norm(x)
 
-    encoder_logit = x.clone() # encoder_logit
+    encoder_logit = x.clone()  # encoder_logit
     # TODO 디코더에서 target_mask upper triangular matrix 수정 후 학습해볼것.
-    target_mask = make_std_mask(input_ids) # target mask 생성
+    # target_mask = make_std_mask(input_ids) # target mask 생성
 
     for decoder in self.decoders:
-     x = decoder(x, target_mask)
+      x = decoder(x)
 
     lm_logits = self.lm_head(x)
 
@@ -72,4 +71,3 @@ class Meena(nn.Module):
       loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
     return lm_logits, loss, encoder_logit, x
-

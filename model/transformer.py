@@ -13,7 +13,7 @@ MatMul(Q,K) -> Scale -> Masking(opt. Decoder) -> Softmax -> MatMul(result, V)
 
 """
 
-def self_attention(query, key, value, mask=None):
+def self_attention(query, key, value, mask=None, causal=False):
   key_transpose = torch.transpose(key,-2,-1)                      # (bath, head_num, d_k, token_)
   matmul_result = torch.matmul(query,key_transpose)                # MatMul(Q,K)
   d_k = query.size()[-1]
@@ -21,6 +21,13 @@ def self_attention(query, key, value, mask=None):
 
   if mask is not None:
     attention_score = attention_score.masked_fill(mask == 0, -1e4)
+
+  if causal:
+    query_len = query.size()[2]
+    # causal_mask = torch.tril(torch.ones(query_len, query_len))
+    # attention_score = attention_score.masked_fill_(causal_mask == 0, -1e4)
+    i, j = torch.triu_indices(query_len, query_len, 1)
+    attention_score[:, :, i, j] = -1e4
 
   softmax_attention_score = F.softmax(attention_score,dim=-1)  # 어텐션 값
   result = torch.matmul(softmax_attention_score,value)
@@ -39,7 +46,7 @@ W^O는 d_v * head 갯수 x 모델 dimension
 논문에서는 헤더의 갯수를 8개 사용
 """
 class MultiHeadAttention(nn.Module):
-  def __init__(self, head_num =8 , d_model = 512,dropout = 0.1):
+  def __init__(self, head_num =8 , d_model = 512,dropout = 0.1, causal=False):
     super(MultiHeadAttention,self).__init__()
 
     # print(d_model % head_num)
@@ -48,6 +55,7 @@ class MultiHeadAttention(nn.Module):
     self.head_num = head_num
     self.d_model = d_model
     self.d_k = self.d_v = d_model // head_num
+    self.causal = causal
 
     self.w_q = nn.Linear(d_model,d_model)
     self.w_k = nn.Linear(d_model,d_model)
@@ -68,7 +76,7 @@ class MultiHeadAttention(nn.Module):
     key = self.w_k(key).view(batche_num, -1, self.head_num, self.d_k).transpose(1, 2)
     value = self.w_v(value).view(batche_num, -1, self.head_num, self.d_k).transpose(1, 2)
 
-    attention_result, attention_score = self.self_attention(query, key, value, mask)
+    attention_result, attention_score = self.self_attention(query, key, value, mask, self.causal)
 
     # 원래의 모양으로 다시 변형해준다.
     # torch.continuos는 다음행과 열로 이동하기 위한 stride가 변형되어
@@ -144,16 +152,16 @@ MaskedMultiHeadAttention -> MultiHeadAttention(encoder-decoder attention) -> Fee
 class Decoder(nn.Module):
   def __init__(self, d_model,head_num, dropout):
     super(Decoder,self).__init__()
-    self.masked_multi_head_attention = MultiHeadAttention(d_model= d_model, head_num= head_num)
+    self.masked_multi_head_attention = MultiHeadAttention(d_model= d_model, head_num= head_num, causal=True)
     self.residual_1 = ResidualConnection(d_model,dropout=dropout)
 
     self.feed_forward= FeedForward(d_model)
     self.residual_2 = ResidualConnection(d_model,dropout=dropout)
 
 
-  def forward(self, target, target_mask):
+  def forward(self, target):
     # target, x, target_mask, input_mask
-    x = self.residual_1(target, lambda x: self.masked_multi_head_attention(x, x, x, target_mask))
+    x = self.residual_1(target, lambda x: self.masked_multi_head_attention(x, x, x))
     x = self.residual_2(x, self.feed_forward)
 
     return x

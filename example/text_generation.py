@@ -17,7 +17,7 @@ def sentence_mask_to_max_length(token_indices, max_length, pad_token_id = 0):
     return result
 
 if __name__ =="__main__":
-    base_path = '.'
+    base_path = '..'
     # base_path = '/Users/a60058238/Desktop/dev/workspace/transformer-electra'
 
     log_dir = f'{base_path}/logs'
@@ -44,7 +44,7 @@ if __name__ =="__main__":
     model.load_state_dict(checkpoint['model_state_dict'])
     # model.load_state_dict(torch.load(PATH, map_location=torch.device('cpu')))
     model.eval()
-    sent = '우선 수사 대상에 오른 대법관의 수가 적지 않다.'
+    sent = '‘양승태 사법부’의 재판 거래와 판사 블랙리스트 의혹 등에 직간접적으로 연루된 이들은 대법관부터 심의관(판사)까지 최소 100명은 넘는 것으로 파악되고 있다.'
     padd_token_id = tokenizer.pad_token_id
     tokenized_sentence = tokenizer.encode(sent,add_special_tokens=False)
     while 1:
