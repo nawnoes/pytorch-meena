@@ -37,26 +37,28 @@ class Meena(nn.Module):
     self.position_emb = PositionalEmbedding(dim, max_seq_len)
 
     # Meena Model
-    self.encoders = clones(Encoder(d_model=dim, head_num=head_num, dropout=dropout), encoder_depth)
-    self.decoders = clones(Decoder(d_model=dim, head_num=head_num, dropout=dropout), decoder_depth)
+    # self.encoders = clones(Encoder(d_model=dim, head_num=head_num, dropout=dropout), encoder_depth)
+    # self.decoders = clones(Decoder(d_model=dim, head_num=head_num, dropout=dropout), decoder_depth)
+    self.encoders = nn.ModuleList([Encoder(d_model=dim, head_num=head_num, dropout=dropout) for _ in range(encoder_depth)])
+    self.decoders = nn.ModuleList([Decoder(d_model=dim, head_num=head_num, dropout=dropout) for _ in range(decoder_depth)])
 
     self.norm = nn.LayerNorm(dim)
     self.lm_head = nn.Linear(dim, vocab_size, bias=False)
 
   def forward(self, input_ids, input_mask, labels=None):
     x = self.token_emb(input_ids)
-    x = x + self.position_emb(input_ids).type_as(x)
+    x = x + self.position_emb(input_ids).type_as(x) # encoder input
+
+    target = x.clone() # decoder input
 
     for encoder in self.encoders:
       x = encoder(x, input_mask)
-    x = self.norm(x)
 
-    encoder_logit = x.clone()  # encoder_logit
-    # TODO 디코더에서 target_mask upper triangular matrix 수정 후 학습해볼것.
-    # target_mask = make_std_mask(input_ids) # target mask 생성
+    encoder_logit = x.clone()
 
     for decoder in self.decoders:
-      x = decoder(x)
+      # target, encoder_output, encoder_mask)
+      target = decoder(target, x, input_mask)
 
     lm_logits = self.lm_head(x)
 
