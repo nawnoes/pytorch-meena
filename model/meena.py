@@ -48,19 +48,18 @@ class Meena(nn.Module):
   def forward(self, input_ids, input_mask, labels=None):
     x = self.token_emb(input_ids)
     x = x + self.position_emb(input_ids).type_as(x) # encoder input
-
     target = x.clone() # decoder input
 
     for encoder in self.encoders:
       x = encoder(x, input_mask)
 
-    encoder_logit = x.clone()
+    # encoder_logit = x.clone()
 
     for decoder in self.decoders:
       # target, encoder_output, encoder_mask)
       target = decoder(target, x, input_mask)
 
-    lm_logits = self.lm_head(x)
+    lm_logits = self.lm_head(target)
 
     loss = None
     if labels is not None:
@@ -72,4 +71,4 @@ class Meena(nn.Module):
       loss_fct = CrossEntropyLoss()
       loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
-    return lm_logits, loss, encoder_logit, x
+    return lm_logits, loss

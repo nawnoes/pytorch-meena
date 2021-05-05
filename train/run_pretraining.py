@@ -217,7 +217,7 @@ class MeenaTrainer(object):
         results_file.close()
 
   def save(self, epoch, model, optimizer, losses, train_step):
-    model.cpu()
+    # model.cpu()
     torch.save({
       'epoch': epoch,  # 현재 학습 epoch
       'model_state_dict': model.state_dict(),  # 모델 저장
@@ -226,7 +226,7 @@ class MeenaTrainer(object):
       'train_step': train_step,  # 현재 진행한 학습
       # 'amp': amp.state_dict()
     }, f'{self.checkpoint_path}/{self.model_name}.pth')
-    model.cuda()
+    # model.cuda()
 
 
 def main():
@@ -236,7 +236,7 @@ def main():
   # base_path = '/Users/a60058238/Desktop/dev/workspace/transformer-electra'
 
   log_dir = f'{base_path}/logs'
-  config_path = f'{base_path}/config/meena-config.json'
+  config_path = f'{base_path}/config/meena-config-small.json'
 
   # Config
   config = ModelConfig(config_path=config_path).get_config()
