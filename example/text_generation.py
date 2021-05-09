@@ -44,7 +44,7 @@ if __name__ =="__main__":
     model.load_state_dict(checkpoint['model_state_dict'])
     # model.load_state_dict(torch.load(PATH, map_location=torch.device('cpu')))
     model.eval()
-    sent = '‘양승태 사법부’의 재판 거래와 판사 블랙리스트 의혹 등에 직간접적으로 연루된 이들은 대법관부터 심의관(판사)까지 최소 100명은 넘는 것으로 파악되고 있다.'
+    sent = '안병훈 공정위 국제카르텔과장은 “외국계은행의 담합으로'
     padd_token_id = tokenizer.pad_token_id
     tokenized_sentence = tokenizer.encode(sent,add_special_tokens=False)
     while 1:
@@ -52,7 +52,7 @@ if __name__ =="__main__":
       input_ids = torch.tensor(input_ids).unsqueeze(0)
       inputs_mask = input_ids != 0
 
-      output = model(input_ids, inputs_mask.unsqueeze(1), None)
+      output = model(input_ids, inputs_mask.unsqueeze(1), input_ids)
       pred = output[0]
       next_token_pred = pred.squeeze()[len(tokenized_sentence)]
       top_k_sample = top_k(next_token_pred,9)
