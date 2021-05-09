@@ -166,7 +166,7 @@ class Decoder(nn.Module):
     # target, x, target_mask, input_mask
     x = self.residual_1(target, lambda x: self.masked_multi_head_attention(x, x, x))
     x = self.residual_2(x, lambda x: self.encoder_decoder_attention(x, encoder_output, encoder_output, encoder_mask))
-    x = self.residual_3(x, self.feed_forward)
+    x = self.residual_3(x, lambda x: self.feed_forward(x))
 
     return x
 
