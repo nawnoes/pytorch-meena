@@ -14,4 +14,4 @@ This project use **10K or 22K BPE**.
 34GB Korean corpus data
 
 ## Issue
- 
+  
