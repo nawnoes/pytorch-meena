@@ -12,3 +12,5 @@ Meena's vocab sentencepiece library. Meena team use a vocabulary of **8K BPE**, 
 This project use **10K or 22K BPE**. 
 ## Data
 34GB Korean corpus data
+
+## Issue
