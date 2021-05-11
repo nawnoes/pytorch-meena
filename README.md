@@ -11,7 +11,7 @@ Final Meena dataset contain 341GB of Text
 Meena's vocab sentencepiece library. Meena team use a vocabulary of **8K BPE**, which they found in early experiments to be sufficient for generating specific response. 
 This project use **10K or 22K BPE**. 
 ## Data
-34GB Korean corpus data
+34GB Korean corpus data 
 
 ## Issue
   
