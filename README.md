@@ -15,3 +15,17 @@ This project use **10K or 22K BPE**.
 34GB Korean corpus data 
 
 ## Issue
+
+## Test
+작은 모델로 Sample Data에 대해 테스트
+
+- Only Decoder Model
+  using only transformer
+  + 테스트 체감상 가장 좋음.
+    
+- Seq2Seq Model 
+  seq2seq model like original transformer translation
+  
+- Stack Model
+  Stack Model 1 Encoder + 12 Decoder 
+  + 체감상 나쁘지 않음.

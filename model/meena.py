@@ -44,21 +44,24 @@ class Meena(nn.Module):
     self.norm = nn.LayerNorm(dim)
     self.lm_head = nn.Linear(dim, vocab_size, bias=False)
 
-  def forward(self, input_ids, input_mask, labels=None):
-    x = self.token_emb(input_ids)
-    x = x + self.position_emb(input_ids).type_as(x) # encoder input
-    target = x.clone() # decoder input
+  def forward(self, source_ids, target_ids, source_mask, labels=None):
+    x = self.token_emb(source_ids)
+    x = x + self.position_emb(source_ids).type_as(x) # encoder input
 
     for encoder in self.encoders:
-      x = encoder(x, input_mask)
-
-    # encoder_logit = x.clone()
+      x = encoder(x, source_mask)
+    #
+    # target = self.token_emb(target_ids)
+    # target = target + self.position_emb(target_ids).type_as(target)
+    # for decoder in self.decoders:
+    #   # target, encoder_output, encoder_mask)
+    #   target = decoder(target, x, source_mask)
+    #
+    # lm_logits = self.lm_head(target)
 
     for decoder in self.decoders:
-      # target, encoder_output, encoder_mask)
-      target = decoder(target, x, input_mask)
-
-    lm_logits = self.lm_head(target)
+      x = decoder(x)
+    lm_logits = self.lm_head(x)
 
     loss = None
     if labels is not None:

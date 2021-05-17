@@ -124,7 +124,7 @@ class MeenaTrainer(object):
           # continue
         inputs, input_mask, labels = batch  # _ is input_mask
         inputs, input_mask, labels = inputs.to(self.device), input_mask.to(self.device), labels.to(self.device)
-        output = self.model(inputs, input_mask, labels) # output: lm_logits, loss, encoder_logit, x
+        output = self.model(source_ids=inputs, target_ids=inputs, source_mask= input_mask, labels=labels) # output: lm_logits, loss, encoder_logit, x
 
         loss = output[1]
 
@@ -197,7 +197,7 @@ class MeenaTrainer(object):
       inputs, input_mask, labels = inputs.to(self.device), input_mask.to(self.device), labels.to(self.device)
 
       with torch.no_grad():
-        output = self.model(inputs, input_mask, labels)
+        output = self.model(inputs, inputs, input_mask, labels)
 
       tmp_eval_loss = output[1]
       tmp_perplexity = torch.exp(tmp_eval_loss)
@@ -237,7 +237,7 @@ def main():
   # base_path = '/Users/a60058238/Desktop/dev/workspace/transformer-electra'
 
   log_dir = f'{base_path}/logs'
-  config_path = f'{base_path}/config/meena-config-small.json'
+  config_path = f'{base_path}/config/meena-config.json'
 
   # Config
   config = ModelConfig(config_path=config_path).get_config()
@@ -259,7 +259,7 @@ def main():
     dropout=config.dropout_prob
     )
 
-  # model.cuda()
+  model.cuda()
 
   # optimizer = Adafactor(model.parameters())
   # optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=1e-4)
