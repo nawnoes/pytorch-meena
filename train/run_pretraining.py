@@ -12,8 +12,9 @@ from torch.utils.data import DataLoader, random_split
 
 from tqdm import tqdm
 from transformers import BertTokenizer
-from fairseq.optim.adafactor import Adafactor
+# from fairseq.optim.adafactor import Adafactor
 # from apex import amp
+from torch.optim import AdamW
 
 import os
 import json
@@ -261,7 +262,8 @@ def main():
   # model.cuda()
 
   # optimizer = Adafactor(model.parameters())
-  optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=1e-4)
+  # optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=1e-4)
+  optimizer = AdamW(model.parameters(), lr=3e-4)
 
   if config.fp16:
     model, optimizer = amp.initialize(model, optimizer, opt_level=config.fp16_opt_level)
