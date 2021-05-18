@@ -48,9 +48,15 @@ class Meena(nn.Module):
     x = self.token_emb(source_ids)
     x = x + self.position_emb(source_ids).type_as(x) # encoder input
 
+    # Encoders
     for encoder in self.encoders:
       x = encoder(x, source_mask)
-    #
+
+    # Decoders
+    for decoder in self.decoders:
+      x = decoder(x)
+    lm_logits = self.lm_head(x)
+
     # target = self.token_emb(target_ids)
     # target = target + self.position_emb(target_ids).type_as(target)
     # for decoder in self.decoders:
@@ -58,10 +64,6 @@ class Meena(nn.Module):
     #   target = decoder(target, x, source_mask)
     #
     # lm_logits = self.lm_head(target)
-
-    for decoder in self.decoders:
-      x = decoder(x)
-    lm_logits = self.lm_head(x)
 
     loss = None
     if labels is not None:
