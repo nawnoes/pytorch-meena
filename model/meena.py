@@ -18,8 +18,6 @@ Meena best performing model use Evolbed Transformer
     - 2560 hidden size
     - 128  max token length 
 """
-
-
 class Meena(nn.Module):
   def __init__(self,
                vocab_size,
@@ -36,8 +34,6 @@ class Meena(nn.Module):
     self.position_emb = PositionalEmbedding(dim, max_seq_len)
 
     # Meena Model
-    # self.encoders = clones(Encoder(d_model=dim, head_num=head_num, dropout=dropout), encoder_depth)
-    # self.decoders = clones(Decoder(d_model=dim, head_num=head_num, dropout=dropout), decoder_depth)
     self.encoders = nn.ModuleList([Encoder(d_model=dim, head_num=head_num, dropout=dropout) for _ in range(encoder_depth)])
     self.decoders = nn.ModuleList([Decoder(d_model=dim, head_num=head_num, dropout=dropout) for _ in range(decoder_depth)])
 

@@ -21,7 +21,7 @@ if __name__ =="__main__":
     # base_path = '/Users/a60058238/Desktop/dev/workspace/transformer-electra'
 
     log_dir = f'{base_path}/logs'
-    config_path = f'{base_path}/config/meena-config-small.json'
+    config_path = f'{base_path}/config/meena-config.json'
 
     # Config
     config = ModelConfig(config_path=config_path).get_config()
@@ -45,7 +45,7 @@ if __name__ =="__main__":
     # model.load_state_dict(torch.load(PATH, map_location=torch.device('cpu')))
     model.eval()
     # sent = '안병훈 공정위 국제카르텔과장은 “외국계은행의 담합으로'
-    sent = '베트남에서도 유력한 후보지로 꼽히는 하노이는 북·미 양국 대사관이 설치돼 있어 정상회담'
+    sent = '베트남에서도 유력한 후보지로 꼽히는 하노이는 북 · 미 양국 대사관이 설치돼 있어 정상회담 펨 ㅏ 竜🖐➰엊ⓒ 헝 助 릐 メ 🌰 役햄한 🤢폄 ᄏ 정엊'
     padd_token_id = tokenizer.pad_token_id
     tokenized_sentence = tokenizer.encode(sent,add_special_tokens=False)
     while 1:

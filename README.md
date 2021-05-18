@@ -15,7 +15,9 @@ This project use **10K or 22K BPE**.
 34GB Korean corpus data 
 
 ## Issue
-
+- 모델의 Loss가 0으로 수렴하는 문제.
+    1. 인코딩 문제인지?
+  
 ## Test
 작은 모델로 Sample Data에 대해 테스트
 
