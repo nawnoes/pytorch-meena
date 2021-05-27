@@ -45,7 +45,7 @@ if __name__ =="__main__":
     # model.load_state_dict(torch.load(PATH, map_location=torch.device('cpu')))
     model.eval()
     # sent = '안병훈 공정위 국제카르텔과장은 “외국계은행의 담합으로'
-    sent = '베트남에서도 유력한 후보지로 꼽히는 하노이는 북 · 미 양국 대사관이 설치돼 있어 정상회담 펨 ㅏ 竜🖐➰엊ⓒ 헝 助 릐 メ 🌰 役햄한 🤢폄 ᄏ 정엊'
+    sent = 'A: 최근 정싱회담은 분위기가 어땠나? [SEP] B: 나는 정치를 잘 몰라서 [SEP] A:'
     padd_token_id = tokenizer.pad_token_id
     tokenized_sentence = tokenizer.encode(sent,add_special_tokens=False)
     while 1:
@@ -56,7 +56,7 @@ if __name__ =="__main__":
       output = model(input_ids, input_ids, inputs_mask.unsqueeze(1), input_ids)
       pred = output[0]
       next_token_pred = pred.squeeze()[len(tokenized_sentence)]
-      top_k_sample = top_k(next_token_pred,1)
+      top_k_sample = top_k(next_token_pred,8)
       # gen = tokenizer.decode(top_k_sample).replace(' ','')
       tokenized_sentence = tokenized_sentence+top_k_sample.tolist()
       # if gen == '[SEP]':
