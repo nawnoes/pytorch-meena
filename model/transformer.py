@@ -129,16 +129,17 @@ class Decoder(nn.Module):
     self.masked_multi_head_attention = MultiHeadAttention(d_model= d_model, head_num= head_num, causal=True)
     self.residual_1 = ResidualConnection(d_model,dropout=dropout)
 
-    # self.encoder_decoder_attention = MultiHeadAttention(d_model=d_model, head_num=head_num)
-    # self.residual_2 = ResidualConnection(d_model, dropout=dropout)
+    self.encoder_decoder_attention = MultiHeadAttention(d_model=d_model, head_num=head_num)
+    self.residual_2 = ResidualConnection(d_model, dropout=dropout)
 
     self.feed_forward = FeedForward(d_model)
     self.residual_3 = ResidualConnection(d_model, dropout=dropout)
 
 
-  def forward(self, target):#, encoder_output, encoder_mask):
+  def forward(self, target, encoder_output= None, encoder_mask =None):
     x = self.residual_1(target, lambda x: self.masked_multi_head_attention(x, x, x))
-    # x = self.residual_2(x, lambda x: self.encoder_decoder_attention(x, encoder_output, encoder_output, encoder_mask))
+    if encoder_output is not None and encoder_mask is not None:
+      x = self.residual_2(x, lambda x: self.encoder_decoder_attention(x, encoder_output, encoder_output, encoder_mask))
     x = self.residual_3(x, lambda x: self.feed_forward(x))
 
     return x
