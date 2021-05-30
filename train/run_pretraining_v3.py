@@ -20,7 +20,7 @@ import os
 import json
 import logging
 from datetime import datetime
-from model.meena import Meena
+from model.meena_v3 import Meena
 from common.arg import ModelConfig
 from common.dataset import DatasetForMeena
 
