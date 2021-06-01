@@ -112,6 +112,7 @@ def make_seq2seq_data(tokenizer, dir_path, max_len):
   for file_name in file_progress_bar:
     path = f'{dir_path}/{file_name}'
     data_file = open(path, 'r', encoding='utf-8')
+    out_data_file = open(f'{dir_path}train_sample.txt', 'w', encoding='utf-8')
     for line in tqdm(data_file,
                      desc='Data load for pretraining',
                      position=1, leave=True):
@@ -122,21 +123,30 @@ def make_seq2seq_data(tokenizer, dir_path, max_len):
         target.append(line_ids)
         target_sum_len += len(line_ids)
       else:
-        target_pop = target.pop(0)
-        source.append(target_pop)
-        
-        target_sum_len -= len(target_pop)
-        source_sum_len += len(target_pop)
-      
-      while source_sum_len>max_len:
+        while target_sum_len + len(line_ids) > max_len:
+          target_pop = target.pop(0)
+          source.append(target_pop)
+
+          target_sum_len -= len(target_pop)
+          source_sum_len += len(target_pop)
+
+      while source_sum_len > max_len:
         source_pop = source.pop(0)
         source_sum_len -= len(source_pop)
-        
-        
-        
+
+    if source_sum_len >0 and target_sum_len > 0:
+      full_source_str =''
+      full_target_str = ''
+      for line in source:
+        full_source_str += line
+      for line in target:
+        full_target_str += line
+
+      out_data_file.write(f'{full_source_str}\t{full_target_str}')
+
 if __name__ == '__main__':
-  data_path = '../data/plain/'
+  data_path = '../data/train/'
   tokenizer = BertTokenizer('../data/vocab-v1.txt')
-  dataset = DatasetForSeq2seq(tokenizer, 128, data_path)
+  dataset = make_seq2seq_data(tokenizer, data_path, 128)
 
   print(dataset)
