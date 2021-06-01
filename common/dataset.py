@@ -112,41 +112,57 @@ def make_seq2seq_data(tokenizer, dir_path, max_len):
   for file_name in file_progress_bar:
     path = f'{dir_path}/{file_name}'
     data_file = open(path, 'r', encoding='utf-8')
-    out_data_file = open(f'{dir_path}train_sample.txt', 'w', encoding='utf-8')
+    out_data_file = open(f'{dir_path}train_sample.txt', 'a', encoding='utf-8')
     for line in tqdm(data_file,
                      desc='Data load for pretraining',
                      position=1, leave=True):
       line = line[:-1]
-      line_ids = tokenizer(line, add_special_tokens=False, pad_to_max_length=False)
+      line_ids = tokenizer.encode(line, add_special_tokens=False, pad_to_max_length=False, max_length=max_len,truncation=True)
+      
+      if line == '':
+        source = []
+        target = []
+  
+        source_sum_len = 0
+        target_sum_len = 0
+        continue
       
       if target_sum_len + len(line_ids)<max_len:
-        target.append(line_ids)
+        target.append((line,line_ids))
         target_sum_len += len(line_ids)
       else:
         while target_sum_len + len(line_ids) > max_len:
+          save_train_data(out_data_file, source, target)
+
           target_pop = target.pop(0)
           source.append(target_pop)
 
-          target_sum_len -= len(target_pop)
-          source_sum_len += len(target_pop)
+          target_sum_len -= len(target_pop[1])
+          source_sum_len += len(target_pop[1])
 
       while source_sum_len > max_len:
         source_pop = source.pop(0)
-        source_sum_len -= len(source_pop)
+        source_sum_len -= len(source_pop[1])
 
-    if source_sum_len >0 and target_sum_len > 0:
-      full_source_str =''
-      full_target_str = ''
-      for line in source:
-        full_source_str += line
-      for line in target:
-        full_target_str += line
-
-      out_data_file.write(f'{full_source_str}\t{full_target_str}')
+      if source_sum_len >0 and target_sum_len > 0:
+        save_train_data(out_data_file, source, target)
+        
+def save_train_data(outfile_writer, source, target):
+  if len(source) == 0 or len(target) == 0:
+    return
+  full_source_str = ''
+  full_target_str = ''
+  for line in source:
+    full_source_str += line[0]
+  for line in target:
+    full_target_str += line[0]
+  
+  outfile_writer.write(f'{full_source_str}\t{full_target_str}\n')
+        
 
 if __name__ == '__main__':
-  data_path = '../data/train/'
-  tokenizer = BertTokenizer('../data/vocab-v1.txt')
+  data_path = '../data/plain/'
+  tokenizer = BertTokenizer('../data/vocab-v1.txt', do_lower_case=False)
   dataset = make_seq2seq_data(tokenizer, data_path, 128)
 
   print(dataset)
