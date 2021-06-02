@@ -87,16 +87,16 @@ class DatasetForSeq2seq(Dataset):
     return len(self.source)
 
   def __getitem__(self, idx):
-    source_input_ids = self._tokenize_input_ids(self.source[idx])
-    target_input_ids = self._tokenize_input_ids(self.target[idx])
-    target_labels = target_input_ids.clone()
+    encoder_input_ids = self._tokenize_input_ids(self.source[idx])
+    decoder_input_ids = self._tokenize_input_ids(self.target[idx])
+    labels = decoder_input_ids.clone()
 
-    source_input_ids = source_input_ids.squeeze()
-    target_input_ids = target_input_ids.squeeze()
-    target_labels = target_labels.squeeze()
-    source_inputs_mask = source_input_ids != 0
+    encoder_input_ids = encoder_input_ids.squeeze()
+    decoder_input_ids = decoder_input_ids.squeeze()
+    labels = labels.squeeze()
+    encoder_inputs_mask = encoder_input_ids != 0
 
-    return source_input_ids, source_inputs_mask.unsqueeze(0), target_input_ids, target_labels
+    return encoder_input_ids, decoder_input_ids, encoder_inputs_mask.unsqueeze(0), labels
 
 def make_seq2seq_data(tokenizer, dir_path, max_len):
   max_len -= 1 # [CLS] 토큰을 위함

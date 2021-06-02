@@ -1,4 +1,3 @@
-from collections import namedtuple
 from torch import nn
 from model.transformer import PositionalEmbedding, Encoder, Decoder
 from torch.nn import CrossEntropyLoss
