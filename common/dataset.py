@@ -164,8 +164,8 @@ def save_train_data(outfile_writer, source, target):
         
 
 if __name__ == '__main__':
-  data_path = '../data/plain/'
+  data_path = '../data/seq2seq/'
   tokenizer = BertTokenizer('../data/vocab-v1.txt', do_lower_case=False)
-  dataset = make_seq2seq_data(tokenizer, data_path, 128)
-  # dataset = DatasetForSeq2seq(tokenizer,128, data_path)
+  # dataset = make_seq2seq_data(tokenizer, data_path, 128)
+  dataset = DatasetForSeq2seq(tokenizer,128, data_path)
   print(dataset)
