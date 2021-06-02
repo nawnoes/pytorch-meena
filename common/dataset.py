@@ -55,7 +55,7 @@ class DatasetForSeq2seq(Dataset):
 
     self.tokenizer = tokenizer
     self.max_len = max_len
-    self.docs = []
+
     self.source = []
     self.target = []
 
@@ -70,12 +70,11 @@ class DatasetForSeq2seq(Dataset):
                        desc='Data load for pretraining',
                        position=1, leave=True):
         line = line[:-1]
-        line_ids = self.tokenizer(line, add_special_tokens=False, pad_to_max_length=False)
-        
-        
-        self.target.append(line_ids)
-        
-        self.docs.append(line)
+        splited_line = line.split('\t')
+
+        self.source.append(splited_line[0])
+        self.target.append(splited_line[1])
+
     logging.info('Complete data load')
 
   def _tokenize_input_ids(self, input_ids: list, add_special_tokens: bool = False, pad_to_max_length: bool = True):
@@ -85,19 +84,22 @@ class DatasetForSeq2seq(Dataset):
     return inputs
 
   def __len__(self):
-    return len(self.docs)
+    return len(self.source)
 
   def __getitem__(self, idx):
-    inputs = self._tokenize_input_ids(self.docs[idx], pad_to_max_length=True)
-    labels = inputs.clone()
+    source_input_ids = self._tokenize_input_ids(self.source[idx])
+    target_input_ids = self._tokenize_input_ids(self.target[idx])
+    target_labels = target_input_ids.clone()
 
-    inputs = inputs.squeeze()
-    labels = labels.squeeze()
-    inputs_mask = inputs != 0
+    source_input_ids = source_input_ids.squeeze()
+    target_input_ids = target_input_ids.squeeze()
+    target_labels = target_labels.squeeze()
+    source_inputs_mask = source_input_ids != 0
 
-    return inputs, inputs_mask.unsqueeze(0), labels
+    return source_input_ids, source_inputs_mask.unsqueeze(0), target_input_ids, target_labels
 
 def make_seq2seq_data(tokenizer, dir_path, max_len):
+  max_len -= 1 # [CLS] 토큰을 위함
   source = []
   target = []
 
@@ -126,43 +128,44 @@ def make_seq2seq_data(tokenizer, dir_path, max_len):
         source_sum_len = 0
         target_sum_len = 0
         continue
-      
-      if target_sum_len + len(line_ids)<max_len:
+      line += ' [SEP] '
+      line_ids += [tokenizer.sep_token_id]
+      if target_sum_len + len(line_ids)+1<max_len:
         target.append((line,line_ids))
-        target_sum_len += len(line_ids)
+        target_sum_len += len(line_ids)+1
       else:
-        while target_sum_len + len(line_ids) > max_len:
+        while target_sum_len + len(line_ids)+1 > max_len and len(target)>0:
           save_train_data(out_data_file, source, target)
 
           target_pop = target.pop(0)
           source.append(target_pop)
 
-          target_sum_len -= len(target_pop[1])
-          source_sum_len += len(target_pop[1])
+          target_sum_len -= len(target_pop[1])+1
+          source_sum_len += len(target_pop[1])+1
 
       while source_sum_len > max_len:
         source_pop = source.pop(0)
-        source_sum_len -= len(source_pop[1])
+        source_sum_len -= len(source_pop[1])+1
 
-      if source_sum_len >0 and target_sum_len > 0:
-        save_train_data(out_data_file, source, target)
+      # if source_sum_len >0 and target_sum_len > 0:
+        # save_train_data(out_data_file, source, target)
         
 def save_train_data(outfile_writer, source, target):
   if len(source) == 0 or len(target) == 0:
     return
-  full_source_str = ''
-  full_target_str = ''
+  full_source_str = '[CLS] '
+  full_target_str = '[CLS] '
   for line in source:
     full_source_str += line[0]
   for line in target:
     full_target_str += line[0]
   
-  outfile_writer.write(f'{full_source_str}\t{full_target_str}\n')
+  outfile_writer.write(f'{(full_source_str.strip())}\t{full_target_str.strip()}\n')
         
 
 if __name__ == '__main__':
   data_path = '../data/plain/'
   tokenizer = BertTokenizer('../data/vocab-v1.txt', do_lower_case=False)
   dataset = make_seq2seq_data(tokenizer, data_path, 128)
-
+  # dataset = DatasetForSeq2seq(tokenizer,128, data_path)
   print(dataset)
