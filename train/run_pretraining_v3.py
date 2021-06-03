@@ -259,7 +259,7 @@ def main():
     dropout=config.dropout_prob
     )
 
-  model.cuda()
+  # model.cuda()
 
   # optimizer = Adafactor(model.parameters())
   # optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=1e-4)

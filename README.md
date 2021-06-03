@@ -15,8 +15,11 @@ This project use **10K or 22K BPE**.
 34GB Korean corpus data 
 
 ## Issue
-- 모델의 Loss가 0으로 수렴하는 문제.
+- seq2seq 모델에서 Loss가 0으로 수렴하는 문제.
     1. 인코딩 문제인지?
+    2. encdoer input과 decoder input이 동일해서 발생하는것으로 예상
+        - seq2seq 용으로 context를 encoder에 그 다음 문장들을 decoder 입력으로 넣어주기 위한 dataset(DatasetForSeq2seq) 테스트
+        - `train/run_pretraining_v3` 로 테스트
   
 ## Test
 작은 모델로 Sample Data에 대해 테스트
