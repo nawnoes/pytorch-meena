@@ -12,8 +12,8 @@ from torch.utils.data import DataLoader, random_split
 
 from tqdm import tqdm
 from transformers import BertTokenizer
-# from fairseq.optim.adafactor import Adafactor
-# from apex import amp
+from fairseq.optim.adafactor import Adafactor
+from apex import amp
 from torch.optim import AdamW
 
 import os
@@ -98,7 +98,7 @@ class MeenaTrainer(object):
 
       self.model.load_state_dict(checkpoint['model_state_dict'])
       optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-      # amp.load_state_dict(checkpoint['amp'])
+      amp.load_state_dict(checkpoint['amp'])
 
     self.model.train()
     self.model.to(self.device)
@@ -218,16 +218,16 @@ class MeenaTrainer(object):
         results_file.close()
 
   def save(self, epoch, model, optimizer, losses, train_step):
-    # model.cpu()
+    model.cpu()
     torch.save({
       'epoch': epoch,  # 현재 학습 epoch
       'model_state_dict': model.state_dict(),  # 모델 저장
       'optimizer_state_dict': optimizer.state_dict(),  # 옵티마이저 저장
       'losses': losses,  # Loss 저장
       'train_step': train_step,  # 현재 진행한 학습
-      # 'amp': amp.state_dict()
+      'amp': amp.state_dict()
     }, f'{self.checkpoint_path}/{self.model_name}.pth')
-    # model.cuda()
+    model.cuda()
 
 
 def main():
@@ -262,8 +262,8 @@ def main():
   model.cuda()
 
   # optimizer = Adafactor(model.parameters())
-  # optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=1e-4)
-  optimizer = AdamW(model.parameters(), lr=3e-4)
+  optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=3e-4)
+  # optimizer = AdamW(model.parameters(), lr=3e-4)
 
   if config.fp16:
     model, optimizer = amp.initialize(model, optimizer, opt_level=config.fp16_opt_level)
