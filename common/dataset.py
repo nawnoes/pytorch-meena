@@ -1,7 +1,6 @@
 import os
 import torch
 import logging
-import torch.nn.functional as F
 from transformers import BertTokenizer
 from torch.utils.data import Dataset
 from tqdm import tqdm
@@ -114,7 +113,7 @@ def make_seq2seq_data(tokenizer, dir_path, max_len):
   for file_name in file_progress_bar:
     path = f'{dir_path}/{file_name}'
     data_file = open(path, 'r', encoding='utf-8')
-    out_data_file = open(f'{dir_path}train_sample.txt', 'a', encoding='utf-8')
+    out_data_file = open(f'{dir_path}processed/{file_name}', 'a', encoding='utf-8')
     for line in tqdm(data_file,
                      desc='Data load for pretraining',
                      position=1, leave=True):
@@ -164,8 +163,8 @@ def save_train_data(outfile_writer, source, target):
         
 
 if __name__ == '__main__':
-  data_path = '../data/seq2seq/'
-  tokenizer = BertTokenizer('../data/vocab-v1.txt', do_lower_case=False)
-  # dataset = make_seq2seq_data(tokenizer, data_path, 128)
-  dataset = DatasetForSeq2seq(tokenizer,128, data_path)
+  data_path = '../data/plain_data/'
+  tokenizer = BertTokenizer('../data/vocab-10K.txt', do_lower_case=False)
+  dataset = make_seq2seq_data(tokenizer, data_path, 128)
+  # dataset = DatasetForSeq2seq(tokenizer,128, data_path)
   print(dataset)
