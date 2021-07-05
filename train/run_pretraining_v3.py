@@ -22,7 +22,7 @@ import logging
 from datetime import datetime
 from model.meena_v3 import Meena
 from common.arg import ModelConfig
-from common.dataset import DatasetForSeq2seq
+from common.dataset import DatasetForSeq2seq, DatasetForSeq2seqV2
 
 class MeenaTrainer(object):
   def __init__(self,
@@ -197,7 +197,7 @@ class MeenaTrainer(object):
       encoder_input_ids, decoder_input_ids, encoder_input_mask, labels = encoder_input_ids.to(self.device), decoder_input_ids.to(self.device), encoder_input_mask.to(self.device), labels.to(self.device)
 
       with torch.no_grad():
-        output = self.model(encoder_input_ids, decoder_input_ids, encoder_input_mask) # output: lm_logits, loss, encoder_logit, x
+        output = self.model(encoder_input_ids, decoder_input_ids, encoder_input_mask, labels) # output: lm_logits, loss, encoder_logit, x
 
       tmp_eval_loss = output[1]
       tmp_perplexity = torch.exp(tmp_eval_loss)
@@ -246,7 +246,7 @@ def main():
   tokenizer = BertTokenizer(vocab_file=config.vocab_path, do_lower_case=False)
 
   # Dataset
-  dataset = DatasetForSeq2seq(tokenizer, config.max_seq_len, config.data_path)
+  dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path)
 
   # Meena Model
   model = Meena(
@@ -258,8 +258,8 @@ def main():
     head_num=config.n_head,
     dropout=config.dropout_prob
     )
-
-  model.cuda()
+  if torch.cuda.is_available():
+    model.cuda()
 
   # optimizer = Adafactor(model.parameters())
   optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=3e-4)
