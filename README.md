@@ -27,7 +27,7 @@ This project use **10K or 22K BPE**.
    - 기존 GPT계열의 모델과 동일하게 학습.
     
 2. Seq2Seq Model: Seq2seq model like original transformer model
-   - 
+   
    
 3. Stack Model: Stack Model 1 Encoder + 12 Decoder 
    - 체감상 나쁘지 않음.
