@@ -1,6 +1,6 @@
 {
-  "vocab_path" : "../data/vocab-v1.txt",
-  "data_path" :"../data/train/" ,
+  "vocab_path" : "../data/vocab-10K.txt",
+  "data_path" :"../data/tmp/" ,
   "checkpoint_path" : "../checkpoint",
   "model_name": "komeena-small",
   "dim": 768,
@@ -12,7 +12,7 @@
   "batch_size" : 4,
   "epochs" : 20,
   "log_steps" : 1,
-  "ckpt_steps" : 10,
+  "ckpt_steps" : 100,
   "gradient_accumulation_steps": 1,
   "fp16": false,
   "fp16_opt_level": "O2"

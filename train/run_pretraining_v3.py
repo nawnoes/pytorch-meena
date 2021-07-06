@@ -22,7 +22,7 @@ import logging
 from datetime import datetime
 from model.meena_v3 import Meena
 from common.arg import ModelConfig
-from common.dataset import DatasetForSeq2seq,DatasetForSeq2seqV2
+from common.dataset import DatasetForSeq2seq, DatasetForSeq2seqV2
 
 class MeenaTrainer(object):
   def __init__(self,
@@ -232,7 +232,9 @@ class MeenaTrainer(object):
 
 def main():
   torch.manual_seed(9)
+  # base_path = '/content/drive/My Drive/Colab Notebooks/transformer-electra'
   base_path = '..'
+  # base_path = '/Users/a60058238/Desktop/dev/workspace/transformer-electra'
 
   log_dir = f'{base_path}/logs'
   config_path = f'{base_path}/config/meena-config.json'
@@ -256,8 +258,8 @@ def main():
     head_num=config.n_head,
     dropout=config.dropout_prob
     )
-
-  model.cuda()
+  if torch.cuda.is_available():
+    model.cuda()
 
   # optimizer = Adafactor(model.parameters())
   optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=3e-4)
