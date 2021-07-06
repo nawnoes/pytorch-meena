@@ -18,19 +18,16 @@ This project use **10K or 22K BPE**.
 - seq2seq 모델에서 Loss가 0으로 수렴하는 문제.
     1. 인코딩 문제인지?
     2. encdoer input과 decoder input이 동일해서 발생하는것으로 예상
-        - seq2seq 용으로 context를 encoder에 그 다음 문장들을 decoder 입력으로 넣어주기 위한 dataset(DatasetForSeq2seq) 테스트
-        - `train/run_pretraining_v3` 로 테스트
+        - [2021.07.05] Encoder의 입력과 Decoder의 입력을 다르게 변경해서 테스트
   
 ## Test
 작은 모델로 Sample Data에 대해 테스트
 
-- Only Decoder Model
-  using only transformer
-  + 테스트 체감상 가장 좋음.
+1. Only Decoder Model: only transformer decoder
+   - 기존 GPT계열의 모델과 동일하게 학습.
     
-- Seq2Seq Model 
-  seq2seq model like original transformer translation
-  
-- Stack Model
-  Stack Model 1 Encoder + 12 Decoder 
-  + 체감상 나쁘지 않음.
+2. Seq2Seq Model: Seq2seq model like original transformer model
+   - 
+   
+3. Stack Model: Stack Model 1 Encoder + 12 Decoder 
+   - 체감상 나쁘지 않음.
