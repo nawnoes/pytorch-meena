@@ -22,7 +22,7 @@ import logging
 from datetime import datetime
 from model.meena_v3 import Meena
 from common.arg import ModelConfig
-from common.dataset import DatasetForSeq2seq
+from common.dataset import DatasetForSeq2seq,DatasetForSeq2seqV2
 
 class MeenaTrainer(object):
   def __init__(self,
@@ -197,7 +197,7 @@ class MeenaTrainer(object):
       encoder_input_ids, decoder_input_ids, encoder_input_mask, labels = encoder_input_ids.to(self.device), decoder_input_ids.to(self.device), encoder_input_mask.to(self.device), labels.to(self.device)
 
       with torch.no_grad():
-        output = self.model(encoder_input_ids, decoder_input_ids, encoder_input_mask) # output: lm_logits, loss, encoder_logit, x
+        output = self.model(encoder_input_ids, decoder_input_ids, encoder_input_mask, labels) # output: lm_logits, loss, encoder_logit, x
 
       tmp_eval_loss = output[1]
       tmp_perplexity = torch.exp(tmp_eval_loss)
@@ -232,9 +232,7 @@ class MeenaTrainer(object):
 
 def main():
   torch.manual_seed(9)
-  # base_path = '/content/drive/My Drive/Colab Notebooks/transformer-electra'
   base_path = '..'
-  # base_path = '/Users/a60058238/Desktop/dev/workspace/transformer-electra'
 
   log_dir = f'{base_path}/logs'
   config_path = f'{base_path}/config/meena-config.json'
@@ -246,7 +244,7 @@ def main():
   tokenizer = BertTokenizer(vocab_file=config.vocab_path, do_lower_case=False)
 
   # Dataset
-  dataset = DatasetForSeq2seq(tokenizer, config.max_seq_len, config.data_path)
+  dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path)
 
   # Meena Model
   model = Meena(
