@@ -265,4 +265,9 @@ if __name__ == '__main__':
     tokenizer = BertTokenizer('../data/vocab-10K.txt', do_lower_case=False)
     # dataset = make_seq2seq_data(tokenizer, data_path, 128)
     dataset = DatasetForSeq2seqV2(tokenizer,128, data_path)
+    
+    save_path ='../cache/train_data.pickle'
+    torch.save(dataset,save_path)
+    
+    a = torch.load(save_path)
     print(dataset)
