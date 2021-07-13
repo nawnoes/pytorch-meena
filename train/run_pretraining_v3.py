@@ -12,8 +12,8 @@ from torch.utils.data import DataLoader, random_split
 
 from tqdm import tqdm
 from transformers import BertTokenizer
-from fairseq.optim.adafactor import Adafactor
-from apex import amp
+# from fairseq.optim.adafactor import Adafactor
+# from apex import amp
 from torch.optim import AdamW
 
 import os
@@ -79,7 +79,6 @@ class MeenaTrainer(object):
             log_steps,
             ckpt_steps,
             gradient_accumulation_steps=1):
-
     losses = {}
     global_steps = 0
     local_steps = 0
@@ -229,6 +228,22 @@ class MeenaTrainer(object):
     }, f'{self.checkpoint_path}/{self.model_name}.pth')
     model.cuda()
 
+def meena_dataset(config, tokenizer):
+  cache_data_path = f'{config.cache_path}/{config.model_name}.pickle'
+  cache_dir_path= os.path.dirname(cache_data_path)
+
+  if os.path.exists(cache_data_path): # 캐시 데이터가 존재하는 경우
+    dataset = torch.load(cache_data_path)
+    return dataset
+  else: # 캐시 데이터가 없는 경우
+    if not os.path.exists(cache_dir_path):
+      os.makedirs(cache_dir_path) # 캐시 디렉토리 경로 생성
+
+    dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path)
+    torch.save(dataset, cache_data_path) # 데이터 저장
+
+    return dataset
+
 
 def main():
   torch.manual_seed(9)
@@ -246,7 +261,8 @@ def main():
   tokenizer = BertTokenizer(vocab_file=config.vocab_path, do_lower_case=False)
 
   # Dataset
-  dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path)
+  # dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path)
+  dataset = meena_dataset(config,tokenizer)
 
   # Meena Model
   model = Meena(
@@ -262,8 +278,8 @@ def main():
     model.cuda()
 
   # optimizer = Adafactor(model.parameters())
-  optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=3e-4)
-  # optimizer = AdamW(model.parameters(), lr=3e-4)
+  # optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=3e-4)
+  optimizer = AdamW(model.parameters(), lr=3e-4)
 
   if config.fp16:
     model, optimizer = amp.initialize(model, optimizer, opt_level=config.fp16_opt_level)
