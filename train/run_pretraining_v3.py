@@ -176,9 +176,6 @@ class MeenaTrainer(object):
     return self.model
 
   def evaluate(self, dataloader):
-    if self.n_gpu > 1 and not isinstance(self.model, nn.DataParallel):
-      self.model = nn.DataParallel(self.model)
-
     self.model.eval()
 
     eval_loss = 0.0
@@ -227,6 +224,7 @@ class MeenaTrainer(object):
       'amp': amp.state_dict()
     }, f'{self.checkpoint_path}/{self.model_name}.pth')
     model.cuda()
+    torch.Pall
 
 def meena_dataset(config, tokenizer):
   cache_data_path = f'{config.cache_path}/{config.model_name}.pickle'
