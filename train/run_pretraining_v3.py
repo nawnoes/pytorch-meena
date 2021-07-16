@@ -12,9 +12,9 @@ from torch.utils.data import DataLoader, random_split
 
 from tqdm import tqdm
 from transformers import BertTokenizer
-# from fairseq.optim.adafactor import Adafactor
-# from apex import amp
-from torch.optim import AdamW
+from fairseq.optim.adafactor import Adafactor
+from apex import amp
+# from torch.optim import AdamW
 
 import os
 import json
@@ -99,6 +99,11 @@ class MeenaTrainer(object):
       optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
       amp.load_state_dict(checkpoint['amp'])
 
+      # remove checkpoint for gpu memory
+      del checkpoint
+
+    # release unopccupied memory
+    torch.cuda.empty_cache()
     self.model.train()
     self.model.to(self.device)
 
@@ -224,7 +229,6 @@ class MeenaTrainer(object):
       'amp': amp.state_dict()
     }, f'{self.checkpoint_path}/{self.model_name}.pth')
     model.cuda()
-    torch.Pall
 
 def meena_dataset(config, tokenizer):
   cache_data_path = f'{config.cache_path}/{config.model_name}.pickle'
@@ -276,8 +280,8 @@ def main():
     model.cuda()
 
   # optimizer = Adafactor(model.parameters())
-  # optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=3e-4)
-  optimizer = AdamW(model.parameters(), lr=3e-4)
+  optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=3e-4)
+  # optimizer = AdamW(model.parameters(), lr=3e-4)
 
   if config.fp16:
     model, optimizer = amp.initialize(model, optimizer, opt_level=config.fp16_opt_level)
