@@ -8,6 +8,7 @@ from common.generate import top_p, top_k
 def get_encoder_input(tokenizer:BertTokenizer, input_str:list, config: ModelConfig):
     encoder_input = torch.tensor(tokenizer.encode(input_str,
                                                     add_special_tokens=False,
+                                                    padding=True,
                                                     max_length=config.max_seq_len,
                                                     return_tensors='pt',
                                                     truncation=True))
@@ -24,7 +25,7 @@ def get_decoder_input(tokenizer:BertTokenizer, input_str:list, config: ModelConf
 
 def get_next_token(tokenizer, logit, output_str, func):
     output_ids = tokenizer.encode(output_str,add_special_tokens=False)
-    next_token_ebedd = logit.squeeze()[len(output_ids)]
+    next_token_ebedd = logit.squeeze()[len(output_ids)-1]
     sampled_word = func(next_token_ebedd, 8)
 
     return sampled_word
@@ -59,7 +60,7 @@ def main():
     meta_data +='B=20대 여성 [SEP] '
 
     # Start of chat with Meena
-    target_str = 'B: '
+    target_str = '[CLS] B: '
     print('😁 고미나에게 말을 건네세요!')
 
     while True:
@@ -72,9 +73,14 @@ def main():
         for _ in range(config.max_seq_len):
             logit, _ = model(source_input_ids, target_input_ids, source_input_mask)
             sampled_word = get_next_token(tokenizer, logit, target_str, top_p)
-            if sampled_word == '[SEP]':
-                pass
+            if sampled_word == tokenizer.sep_token_id:
+                target_input_ids += torch.tensor([tokenizer.sep_token_id]).unsqueeze(0)
+                print(tokenizer.decode(target_input_ids,skip_special_tokens=True, clean_up_tokenization_spaces=True))
+                source_input_ids += target_input_ids
+                source_input_ids = [tokenizer.pad_token_id] + source_input_ids[-127:]
+                target_str = '[CLS] B: '
             else:
+                target_input_ids += torch.tensor([sampled_word]).unsqueeze(0)
 
 
 if __name__=='__main__':
