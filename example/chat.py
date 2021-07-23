@@ -1,6 +1,6 @@
 import torch
 from common.arg import ModelConfig
-from model.meena_v3 import Meena
+from model.meena import Meena
 from transformers import BertTokenizer
 from common.generate import top_p, top_k
 
@@ -8,7 +8,7 @@ from common.generate import top_p, top_k
 def get_encoder_input(tokenizer:BertTokenizer, input_str:list, config: ModelConfig):
     encoder_input = torch.tensor(tokenizer.encode(input_str,
                                                     add_special_tokens=False,
-                                                    padding=True,
+                                                    pad_to_max_length=True,
                                                     max_length=config.max_seq_len,
                                                     return_tensors='pt',
                                                     truncation=True))
@@ -25,10 +25,15 @@ def get_decoder_input(tokenizer:BertTokenizer, input_str:list, config: ModelConf
 
 def get_next_token(tokenizer, logit, output_str, func):
     output_ids = tokenizer.encode(output_str,add_special_tokens=False)
-    next_token_ebedd = logit.squeeze()[len(output_ids)-1]
+    next_token_ebedd = logit.squeeze()[-1]
     sampled_word = func(next_token_ebedd, 8)
 
     return sampled_word
+
+def remove_pad_token(tokenizer:BertTokenizer, input_ids: torch.Tensor):
+    pad_token_mask  = input_ids != tokenizer.pad_token_id
+    removed_pad_input_ids = input_ids[pad_token_mask]
+    return removed_pad_input_ids.tolist()
 
 def main():
 
@@ -63,24 +68,60 @@ def main():
     target_str = '[CLS] B: '
     print('😁 고미나에게 말을 건네세요!')
 
+    count = 0
     while True:
         open_conv_query = input('A: ')
         open_conv_query = f'A: {open_conv_query}'
-        source_data = meta_data + open_conv_query + ' [SEP] '
-        source_input_ids, source_input_mask = get_encoder_input(tokenizer=tokenizer, input_str=source_data, config=config)
+
+        if count == 0:
+            source_str = meta_data + open_conv_query + ' [SEP] '
+        else:
+            source_str = source_str + open_conv_query + ' [SEP] '
+        source_input_ids, source_input_mask = get_encoder_input(tokenizer=tokenizer, input_str=source_str, config=config)
         target_input_ids = get_decoder_input(tokenizer=tokenizer, input_str=target_str, config=config)
+
+        # Sentence completed normally
+        is_complete = False
 
         for _ in range(config.max_seq_len):
             logit, _ = model(source_input_ids, target_input_ids, source_input_mask)
             sampled_word = get_next_token(tokenizer, logit, target_str, top_p)
             if sampled_word == tokenizer.sep_token_id:
-                target_input_ids += torch.tensor([tokenizer.sep_token_id]).unsqueeze(0)
-                print(tokenizer.decode(target_input_ids,skip_special_tokens=True, clean_up_tokenization_spaces=True))
-                source_input_ids += target_input_ids
-                source_input_ids = [tokenizer.pad_token_id] + source_input_ids[-127:]
+                # input initialization
+                list_target_input_ids = target_input_ids.tolist()[0]
+                list_target_input_ids.append(tokenizer.sep_token_id)
+                print(tokenizer.decode(list_target_input_ids,skip_special_tokens=True, clean_up_tokenization_spaces=True))
+
+                source_input_ids = remove_pad_token(tokenizer, source_input_ids[0])
+                source_input_ids = source_input_ids + list_target_input_ids[1:]
+                if source_input_ids[-127:][0] == tokenizer.cls_token_id:
+                    source_input_ids = source_input_ids[-127:]
+                else:
+                    source_input_ids = [tokenizer.cls_token_id] + source_input_ids[-127:]
+                source_str = tokenizer.decode(source_input_ids, clean_up_tokenization_spaces=True)
+
                 target_str = '[CLS] B: '
+                is_complete = True
+                break
             else:
-                target_input_ids += torch.tensor([sampled_word]).unsqueeze(0)
+                target_input_ids = target_input_ids.tolist()
+                target_input_ids[0].append(sampled_word)
+                target_input_ids = torch.tensor(target_input_ids)
+
+        if is_complete == False:
+            # input initialization
+            list_target_input_ids = target_input_ids.tolist()[0]
+            list_target_input_ids.append(tokenizer.sep_token_id)
+            print(tokenizer.decode(list_target_input_ids,skip_special_tokens=True, clean_up_tokenization_spaces=True))
+
+            source_input_ids = remove_pad_token(tokenizer, source_input_ids[0])
+            source_input_ids = source_input_ids + list_target_input_ids
+            source_input_ids = [tokenizer.cls_token_id] + source_input_ids[-127:]
+            source_str = tokenizer.decode(source_input_ids, clean_up_tokenization_spaces=True)
+
+            target_str = '[CLS] B: '
+
+        count += 1
 
 
 if __name__=='__main__':

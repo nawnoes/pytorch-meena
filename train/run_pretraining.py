@@ -14,7 +14,7 @@ from tqdm import tqdm
 from transformers import BertTokenizer
 from fairseq.optim.adafactor import Adafactor
 from apex import amp
-from torch.optim import AdamW
+# from torch.optim import AdamW
 
 import os
 import json
@@ -22,7 +22,7 @@ import logging
 from datetime import datetime
 from model.meena import Meena
 from common.arg import ModelConfig
-from common.dataset import DatasetForMeena
+from common.dataset import DatasetForSeq2seq, DatasetForSeq2seqV2
 
 class MeenaTrainer(object):
   def __init__(self,
@@ -79,7 +79,6 @@ class MeenaTrainer(object):
             log_steps,
             ckpt_steps,
             gradient_accumulation_steps=1):
-
     losses = {}
     global_steps = 0
     local_steps = 0
@@ -100,6 +99,11 @@ class MeenaTrainer(object):
       optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
       amp.load_state_dict(checkpoint['amp'])
 
+      # remove checkpoint for gpu memory
+      del checkpoint
+
+    # release unopccupied memory
+    torch.cuda.empty_cache()
     self.model.train()
     self.model.to(self.device)
 
@@ -122,9 +126,9 @@ class MeenaTrainer(object):
       for step, batch in pb:
         # if step < start_step:
           # continue
-        inputs, input_mask, labels = batch  # _ is input_mask
-        inputs, input_mask, labels = inputs.to(self.device), input_mask.to(self.device), labels.to(self.device)
-        output = self.model(source_ids=inputs, target_ids=inputs, source_mask= input_mask, labels=labels) # output: lm_logits, loss, encoder_logit, x
+        encoder_input_ids, decoder_input_ids, encoder_input_mask, labels = batch  # _ is input_mask
+        encoder_input_ids, decoder_input_ids, encoder_input_mask, labels = encoder_input_ids.to(self.device), decoder_input_ids.to(self.device), encoder_input_mask.to(self.device), labels.to(self.device)
+        output = self.model(encoder_input_ids, decoder_input_ids, encoder_input_mask, labels) # output: lm_logits, loss, encoder_logit, x
 
         loss = output[1]
 
@@ -177,9 +181,6 @@ class MeenaTrainer(object):
     return self.model
 
   def evaluate(self, dataloader):
-    if self.n_gpu > 1 and not isinstance(self.model, nn.DataParallel):
-      self.model = nn.DataParallel(self.model)
-
     self.model.eval()
 
     eval_loss = 0.0
@@ -193,11 +194,11 @@ class MeenaTrainer(object):
                             total=len(dataloader),
                             bar_format='{l_bar}{bar:10}{r_bar}'):
 
-      inputs, input_mask, labels = batch  # _ is input_mask
-      inputs, input_mask, labels = inputs.to(self.device), input_mask.to(self.device), labels.to(self.device)
+      encoder_input_ids, decoder_input_ids, encoder_input_mask, labels = batch  # _ is input_mask
+      encoder_input_ids, decoder_input_ids, encoder_input_mask, labels = encoder_input_ids.to(self.device), decoder_input_ids.to(self.device), encoder_input_mask.to(self.device), labels.to(self.device)
 
       with torch.no_grad():
-        output = self.model(inputs, inputs, input_mask, labels)
+        output = self.model(encoder_input_ids, decoder_input_ids, encoder_input_mask, labels) # output: lm_logits, loss, encoder_logit, x
 
       tmp_eval_loss = output[1]
       tmp_perplexity = torch.exp(tmp_eval_loss)
@@ -229,6 +230,22 @@ class MeenaTrainer(object):
     }, f'{self.checkpoint_path}/{self.model_name}.pth')
     model.cuda()
 
+def meena_dataset(config, tokenizer):
+  cache_data_path = f'{config.cache_path}/{config.model_name}.pickle'
+  cache_dir_path= os.path.dirname(cache_data_path)
+
+  if os.path.exists(cache_data_path): # 캐시 데이터가 존재하는 경우
+    dataset = torch.load(cache_data_path)
+    return dataset
+  else: # 캐시 데이터가 없는 경우
+    if not os.path.exists(cache_dir_path):
+      os.makedirs(cache_dir_path) # 캐시 디렉토리 경로 생성
+
+    dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path)
+    torch.save(dataset, cache_data_path) # 데이터 저장
+
+    return dataset
+
 
 def main():
   torch.manual_seed(9)
@@ -246,7 +263,8 @@ def main():
   tokenizer = BertTokenizer(vocab_file=config.vocab_path, do_lower_case=False)
 
   # Dataset
-  dataset = DatasetForMeena(tokenizer, config.max_seq_len, config.data_path)
+  # dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path)
+  dataset = meena_dataset(config,tokenizer)
 
   # Meena Model
   model = Meena(
@@ -258,8 +276,8 @@ def main():
     head_num=config.n_head,
     dropout=config.dropout_prob
     )
-
-  model.cuda()
+  if torch.cuda.is_available():
+    model.cuda()
 
   # optimizer = Adafactor(model.parameters())
   optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=3e-4)
