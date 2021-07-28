@@ -120,7 +120,7 @@ class DatasetForSeq2seqV2(Dataset):
             
             for line in tqdm(data_file,
                              total=total_file_len,
-                             desc='Load Data For Pretraining Meena',
+                             desc=f'Load {file_name}',
                              position=0, leave=True):
                 line = line[:-1]
                 if line == '':
