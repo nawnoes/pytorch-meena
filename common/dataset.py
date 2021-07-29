@@ -1,6 +1,7 @@
 import os
 import torch
 import logging
+import random
 from transformers import BertTokenizer
 from torch.utils.data import Dataset
 from tqdm import tqdm
@@ -105,6 +106,8 @@ class DatasetForSeq2seqV2(Dataset):
         
         self.source=[]
         self.target=[]
+
+        self.threshhold = 0.5
         
         file_list = os.listdir(dir_path)
         # file_progress_bar = tqdm(file_list, position=0, leave=True, bar_format='{l_bar}{bar:10}{r_bar}')
@@ -150,10 +153,11 @@ class DatasetForSeq2seqV2(Dataset):
                     del pop_source
                 tmp_source.append(tmp_value)
                 tmp_source_len += len(tmp_value)
-                
-                source, target = self.get_trainig_data(tmp_source, tmp_target)
-                self.source.append(source)
-                self.target.append(target)
+
+                if random.random() > self.threshhold:
+                    source, target = self.get_trainig_data(tmp_source, tmp_target)
+                    self.source.append(source)
+                    self.target.append(target)
                 
                 
     def get_trainig_data(self, source, target):
