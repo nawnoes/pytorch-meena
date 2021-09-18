@@ -5,7 +5,7 @@ The model consists of 1 encoder and 9 decoder.
 
 
 ## Model
-### Meeana
+### Meena
 Transformer seq2seq model.
 ![](./images/meena_architecture.png)
 
