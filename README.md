@@ -1,12 +1,20 @@
-# KoMeena
-Korean Meena for open domain conversation
+# Goolge Meena - Pytorch 
+Implementation of Google Meena for open domain conversation using pytorch. 
+The model in this repo use original Transformer seq2seq model (not Evolved Transformer).
+The model consists of 1 encoder and 9 decoder.  
+
 
 ## Model
+### Transformer
 My transformer model.
+### Meeana
+Seq2seq model.
+![](./images/meena_architecture.png)
+
 
 ## Vocab
-Meena's vocab sentencepiece library. Meena team use a vocabulary of **8K BPE**, which they found in early experiments to be sufficient for generating specific response. 
-This project use **10K or 22K BPE**. 
+This repo use **10K Wordpiece BPE**. Original Meena use sentencepiece library. Meena team use a vocabulary of **8K BPE**, which they found in early experiments to be sufficient for generating specific response. 
+
 
 ## Data
 - Pretraining Data: 34GB Korean corpus data 
@@ -48,20 +56,6 @@ A : 비명 지르지 마ㅋㅋㅋㅋㅋ
 B : ㅇ0ㅇ 이전 제목이다
 ```
 
-## Issue
-- seq2seq 모델에서 Loss가 0으로 수렴하는 문제.
-    1. 인코딩 문제인지?
-    2. encdoer input과 decoder input이 동일해서 발생하는것으로 예상
-        - [2021.07.05] Encoder의 입력과 Decoder의 입력을 다르게 변경해서 테스트
-        - [2021.07.12] 학습 정상 동작 확인.
-- 성능 문제
-  **개선방법**  
-    
-    - ① Pretraining 후 적은 대화 데이터에 대해 Fine-tuning
-    - ② 대화 데이터 수집
-    
-- 대화 데이터 수집 필요
-    
 ## Test
 Three type model tested 
 - ① Only Decoder Model: only transformer decoder(ex. GPT)
