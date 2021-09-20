@@ -3,12 +3,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-"""
-self-Attention의 경우 Query Q, Key K, Value V를 입력으로 받아
-MatMul(Q,K) -> Scale -> Masking(opt. Decoder) -> Softmax -> MatMul(result, V)
-
-"""
-
 def self_attention(query, key, value, mask=None, causal=False):
   key_transpose = torch.transpose(key,-2,-1)                      # (bath, head_num, d_k, token_)
   matmul_result = torch.matmul(query,key_transpose)                # MatMul(Q,K)
@@ -30,17 +24,6 @@ def self_attention(query, key, value, mask=None, causal=False):
 
   return result, softmax_attention_score
 
-
-"""
-멀티헤드 어텐션
-MultiHead(Q,K,V) = Concat(head_1,head_2,...head_n)W^O
-head_i = Attention(QW^Q_i, KW^K_i, VW^V_i)
-W^Q는 모델의 dimension x d_k
-W^K는 모델의 dimension x d_k
-W^V는 모델의 dimension x d_v
-W^O는 d_v * head 갯수 x 모델 dimension
-논문에서는 헤더의 갯수를 8개 사용
-"""
 class MultiHeadAttention(nn.Module):
   def __init__(self, head_num =8 , d_model = 512,dropout = 0.1, causal=False):
     super(MultiHeadAttention,self).__init__()

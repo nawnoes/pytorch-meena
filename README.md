@@ -3,7 +3,6 @@ Implementation of Google Meena for open domain conversation using pytorch.
 The model in this repo use original Transformer seq2seq model (not Evolved Transformer).
 The model consists of 1 encoder and 9 decoder.  
 
-
 ## Model
 ### Meena
 Transformer seq2seq model.
@@ -15,8 +14,36 @@ This repo use **10K Wordpiece BPE**. Original Meena use sentencepiece library. M
 
 
 ## Data
-- Pretraining Data: 34GB Korean corpus data 
-- Test Pretrainig Data: Kowiki(634MB) + Messanger data(63MB)
+**Pretraining Data**  
+- 34GB Korean corpus data 
+
+**Test Pretrainig Data**  
+- Kowiki(634MB) + Messanger data(63MB)
+
+**Conversation Data**
+- [[AI Hub] Free conversation voice (normal men and women)](https://aihub.or.kr/aidata/30703)
+- [[AI Hub] Free conversation voice (Children)](https://aihub.or.kr/aidata/30705)
+- [[AI Hub] Free conversation voice (elderly men and women)](https://aihub.or.kr/aidata/30704)
+- [[AI Hub] Korean conversation](https://aihub.or.kr/aidata/85)
+- [[AI Hub] In-vehicle conversation and command voice](https://aihub.or.kr/aidata/34177)
+- [[AI Hub] Emotional conversation corpus](https://aihub.or.kr/aidata/7978)
+- [[AI Hub] KETI, Korean conversation dataset](https://aihub.or.kr/opendata/keti-data/recognition-laguage/KETI-02-011)
+- [[AI Hub] KETI, A one-shot conversation dataset with Korean emotion information](https://aihub.or.kr/opendata/keti-data/recognition-laguage/KETI-02-009)
+
+## Device
+- V100, 16G Memory
+- Cuda 10.1, Driver 418.67
+```
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 418.67       Driver Version: 418.67       CUDA Version: 10.1     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|===============================+======================+======================|
+|   0  Tesla V100-PCIE...  On   | 00000000:00:06.0 Off |                    0 |
+| N/A   43C    P0   151W / 250W |  15590MiB / 16130MiB |     63%      Default |
++-------------------------------+----------------------+----------------------+
+```
 
 ## Chat Example
 ### Test Pretrained Model
