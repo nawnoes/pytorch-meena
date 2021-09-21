@@ -21,11 +21,16 @@ This repo use **10K Wordpiece BPE**. Original Meena use sentencepiece library. M
 - Kowiki(634MB) + Messanger data(63MB)
 
 **Conversation Data**
-- [[AI Hub] Free conversation voice (normal men and women)](https://aihub.or.kr/aidata/30703)
-- [[AI Hub] Free conversation voice (Children)](https://aihub.or.kr/aidata/30705)
-- [[AI Hub] Free conversation voice (elderly men and women)](https://aihub.or.kr/aidata/30704)
-- [[AI Hub] Korean conversation](https://aihub.or.kr/aidata/85)
-- [[AI Hub] In-vehicle conversation and command voice](https://aihub.or.kr/aidata/34177)
+
+[comment]: <> (- [[AI Hub] Free conversation voice &#40;normal men and women&#41;]&#40;https://aihub.or.kr/aidata/30703&#41;)
+
+[comment]: <> (- [[AI Hub] Free conversation voice &#40;Children&#41;]&#40;https://aihub.or.kr/aidata/30705&#41;)
+
+[comment]: <> (- [[AI Hub] Free conversation voice &#40;elderly men and women&#41;]&#40;https://aihub.or.kr/aidata/30704&#41;)
+
+[comment]: <> (- [[AI Hub] Korean conversation]&#40;https://aihub.or.kr/aidata/85&#41;)
+
+[comment]: <> (- [[AI Hub] In-vehicle conversation and command voice]&#40;https://aihub.or.kr/aidata/34177&#41;)
 - [[AI Hub] Emotional conversation corpus](https://aihub.or.kr/aidata/7978)
 - [[AI Hub] KETI, Korean conversation dataset](https://aihub.or.kr/opendata/keti-data/recognition-laguage/KETI-02-011)
 - [[AI Hub] KETI, A one-shot conversation dataset with Korean emotion information](https://aihub.or.kr/opendata/keti-data/recognition-laguage/KETI-02-009)
