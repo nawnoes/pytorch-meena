@@ -34,6 +34,30 @@ This repo use **10K Wordpiece BPE**. Original Meena use sentencepiece library. M
 - [[AI Hub] Emotional conversation corpus](https://aihub.or.kr/aidata/7978)
 - [[AI Hub] KETI, Korean conversation dataset](https://aihub.or.kr/opendata/keti-data/recognition-laguage/KETI-02-011)
 - [[AI Hub] KETI, A one-shot conversation dataset with Korean emotion information](https://aihub.or.kr/opendata/keti-data/recognition-laguage/KETI-02-009)
+## Pretraining
+Pretrained on 34GB Korean corpus data. 
+### Train Loss
+- epoch: 1
+- step: 2250000
+
+![](./images/meena_pretrain_losses.png)
+
+### Evaluation
+- Total eval loss: 2.2944
+- Total eval perplexity: 10.4958
+
+```sh
+2021-09-02 16:49:49.942686 | Step: 1557220 | Eval Loss: 2.294469305341254 | Perplexity: 10.495867182863075
+```
+
+## Fine-tuning
+Fine-tuned on 94.8MB Korean Conversation Data
+
+## Checkpoint
+### 1. Pretrained Meena
+- it's preparing
+### 2. Fine-tuned Meena
+- it's preparing
 
 ## Device
 - V100, 16G Memory

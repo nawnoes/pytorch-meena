@@ -55,7 +55,7 @@ def make_new_source_input(tokenizer:BertTokenizer, target_input_ids: torch.Tenso
 def main():
 
     config_path = '../config/meena-config.json'
-    checkpoint_path = '../checkpoint/komeena-3epoch-42.pth'
+    checkpoint_path = '../checkpoint/komeena-base-22560000.pth'
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     config = ModelConfig(config_path).get_config()

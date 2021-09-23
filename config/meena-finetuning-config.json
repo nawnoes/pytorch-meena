@@ -1,9 +1,9 @@
 {
   "vocab_path" : "../data/vocab-10K.txt",
-  "data_path" :"../data/plain/" ,
+  "data_path" :"../data/finetuning/" ,
   "checkpoint_path" : "../checkpoint",
   "cache_path" : "../cache",
-  "model_name": "komeena-base",
+  "model_name": "komeena-base-finetuning",
   "dim": 2560,
   "encoder_depth": 1,
   "decoder_depth": 9,

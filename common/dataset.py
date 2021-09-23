@@ -99,7 +99,7 @@ class DatasetForSeq2seq(Dataset):
         return encoder_input_ids, decoder_input_ids, encoder_inputs_mask.unsqueeze(0), labels
 
 class DatasetForSeq2seqV2(Dataset):
-    def __init__(self,tokenizer, max_len, dir_path):
+    def __init__(self,tokenizer, max_len, dir_path,threshold=0.5):
         logging.info('Load Meena Seq2Seq Data')
         self.tokenizer=tokenizer
         self.max_len=max_len
@@ -107,7 +107,7 @@ class DatasetForSeq2seqV2(Dataset):
         self.source=[]
         self.target=[]
 
-        self.threshhold = 0.5
+        self.threshold = threshold
         
         file_list = os.listdir(dir_path)
         # file_progress_bar = tqdm(file_list, position=0, leave=True, bar_format='{l_bar}{bar:10}{r_bar}')
@@ -154,7 +154,7 @@ class DatasetForSeq2seqV2(Dataset):
                 tmp_source.append(tmp_value)
                 tmp_source_len += len(tmp_value)
 
-                if random.random() > self.threshhold:
+                if random.random() >= self.threshold:
                     source, target = self.get_trainig_data(tmp_source, tmp_target)
                     self.source.append(source)
                     self.target.append(target)

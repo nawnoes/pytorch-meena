@@ -3,9 +3,10 @@ import warnings
 warnings.filterwarnings("ignore")
 import sys
 
-sys.path.append('../') # for local
+sys.path.append('../')
 
 import torch
+
 from torch.utils.data import DataLoader, random_split
 
 from tqdm import tqdm
@@ -49,7 +50,7 @@ class MeenaTrainer(object):
     self.fp16 = fp16
 
     if device is None:
-      self.device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+      self.device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
     if eval_batch_size is None:
       self.eval_batch_size = train_batch_size
@@ -83,27 +84,6 @@ class MeenaTrainer(object):
     start_epoch = 0
     start_step = 0
     step_perplexity = 0.0
-
-    # Load Checkpoint
-    if os.path.isfile(f'{self.checkpoint_path}/{self.model_name}.pth'):
-      self.model.cpu()
-      checkpoint = torch.load(f'{self.checkpoint_path}/{self.model_name}.pth', map_location=self.device)
-      start_epoch = checkpoint['epoch']
-      losses = checkpoint['losses']
-      global_steps = checkpoint['train_step']
-      start_step = global_steps if start_epoch == 0 else global_steps % len(train_dataloader)
-
-      self.model.load_state_dict(checkpoint['model_state_dict'])
-      optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-      amp.load_state_dict(checkpoint['amp'])
-
-      # remove checkpoint for gpu memory
-      del checkpoint
-
-    # release unopccupied memory
-    torch.cuda.empty_cache()
-    self.model.train()
-    self.model.to(self.device)
 
     # Logging
     logging.info(f'{datetime.now()} | Moved model to: {self.device}')
@@ -239,7 +219,7 @@ def meena_dataset(config, tokenizer):
     if not os.path.exists(cache_dir_path):
       os.makedirs(cache_dir_path) # 캐시 디렉토리 경로 생성
 
-    dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path)
+    dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path,threshold=0.0)
     torch.save(dataset, cache_data_path) # 데이터 저장
 
     return dataset
@@ -247,10 +227,12 @@ def meena_dataset(config, tokenizer):
 
 def main():
   torch.manual_seed(9)
+  torch.cuda.set_device(1)
   base_path = '..'
 
   log_dir = f'{base_path}/logs'
-  config_path = f'{base_path}/config/meena-config.json'
+  config_path = f'{base_path}/config/meena-finetuning-config.json'
+  device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
   # Config
   config = ModelConfig(config_path=config_path).get_config()
@@ -259,6 +241,7 @@ def main():
   tokenizer = BertTokenizer(vocab_file=config.vocab_path, do_lower_case=False)
 
   # Dataset
+  # dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path)
   dataset = meena_dataset(config,tokenizer)
 
   # Meena Model
@@ -269,13 +252,19 @@ def main():
           decoder_depth=config.decoder_depth,
           max_seq_len=config.max_seq_len,
           head_num=config.n_head,
-          dropout=config.dropout_prob
-          )
+          dropout=config.dropout_prob)
+
   if torch.cuda.is_available():
-    model.cuda()
+    model.cuda(1)
+
+  checkpoint_path = f'{config.checkpoint_path}/{config.model_name}.pth'
+  checkpoint = torch.load(checkpoint_path, map_location=device)
+  model.load_state_dict(checkpoint['model_state_dict'])
+
+  del checkpoint
 
   # optimizer = Adafactor(model.parameters())
-  optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=3e-4)
+  optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=1e-5)
   # optimizer = AdamW(model.parameters(), lr=3e-4)
 
   if config.fp16:
