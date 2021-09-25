@@ -65,3 +65,19 @@ def top_k(predict, k, is_uniform_sample=False):
     sampled_index = torch.multinomial(probs, 1)
 
   return indexs[sampled_index]
+
+def sample_and_rank(logit, N, temperature=0.88, is_uniform_sample=True):
+  logit = logit.squeeze()
+  logit = logit/temperature
+  softmax_logit = torch.softmax(logit,dim=-1)
+  # 1. Sample N independent candidate responses using plain random sampling with Temperature
+  if is_uniform_sample:
+    sampled_indice = torch.multinomial(logit, N)
+    sampled_values = logit[sampled_indice]
+  else:
+
+  # 2. Select candidate response with highest probability
+  candidate_list = list(zip(sampled_indice, sampled_values))
+  max_candidate = max(candidate_list, key=lambda x: x[1])
+
+  return max_candidate[0] # return index
