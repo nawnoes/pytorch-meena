@@ -70,11 +70,14 @@ def sample_and_rank(logit, N, temperature=0.88, is_uniform_sample=True):
   logit = logit.squeeze()
   logit = logit/temperature
   softmax_logit = torch.softmax(logit,dim=-1)
+
   # 1. Sample N independent candidate responses using plain random sampling with Temperature
   if is_uniform_sample:
-    sampled_indice = torch.multinomial(logit, N)
-    sampled_values = logit[sampled_indice]
+    sampled_indice = random.choices([x for x in range(0,len(softmax_logit))],N)
   else:
+    sampled_indice = torch.multinomial(softmax_logit, N)
+
+  sampled_values = softmax_logit[sampled_indice]
 
   # 2. Select candidate response with highest probability
   candidate_list = list(zip(sampled_indice, sampled_values))
