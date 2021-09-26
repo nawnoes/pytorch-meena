@@ -5,7 +5,7 @@ import torch
 from common.arg import ModelConfig
 from model.meena import Meena
 from transformers import BertTokenizer
-from common.generate import top_p, top_k
+from common.generate import top_p, top_k,sample_and_rank
 
 
 def get_encoder_input(tokenizer:BertTokenizer, input_str:list, config: ModelConfig):
@@ -26,9 +26,9 @@ def get_decoder_input(tokenizer:BertTokenizer, input_str:list, config: ModelConf
                                                     truncation=True))
     return decoder_input
 
-def get_next_token(logit, func):
+def get_next_token(logit, func, **args):
     next_token_ebedd = logit.squeeze()[-1]
-    sampled_word = func(next_token_ebedd, 8)
+    sampled_word = func(next_token_ebedd, **args)
 
     return sampled_word
 
@@ -55,7 +55,7 @@ def make_new_source_input(tokenizer:BertTokenizer, target_input_ids: torch.Tenso
 def main():
 
     config_path = '../config/meena-config.json'
-    checkpoint_path = '../checkpoint/komeena-base-22560000.pth'
+    checkpoint_path = '../checkpoint/komeena-base-finetuning-2epoch.pth'
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     config = ModelConfig(config_path).get_config()
@@ -106,7 +106,9 @@ def main():
 
         for _ in range(config.max_seq_len):
             logit, _ = model(source_input_ids, target_input_ids, source_input_mask)
-            sampled_word = get_next_token(logit, top_p)
+            # sampled_word = get_next_token(logit, top_p)
+            sampled_word = get_next_token(logit, sample_and_rank, N=20, temperature=0.88, is_uniform_sample=False)
+
             if sampled_word == tokenizer.sep_token_id:
                 print(f'{tokenizer.decode(target_input_ids[0],skip_special_tokens=True)}')
                 source_input_ids, source_str = make_new_source_input(tokenizer, target_input_ids, source_input_ids)

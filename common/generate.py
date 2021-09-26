@@ -73,7 +73,7 @@ def sample_and_rank(logit, N, temperature=0.88, is_uniform_sample=True):
 
   # 1. Sample N independent candidate responses using plain random sampling with Temperature
   if is_uniform_sample:
-    sampled_indice = random.choices([x for x in range(0,len(softmax_logit))],N)
+    sampled_indice = random.choices([x for x in range(0,len(softmax_logit))],k=N)
   else:
     sampled_indice = torch.multinomial(softmax_logit, N)
 
@@ -83,4 +83,4 @@ def sample_and_rank(logit, N, temperature=0.88, is_uniform_sample=True):
   candidate_list = list(zip(sampled_indice, sampled_values))
   max_candidate = max(candidate_list, key=lambda x: x[1])
 
-  return max_candidate[0] # return index
+  return max_candidate[0] #, max_candidate[1] # return index, score
