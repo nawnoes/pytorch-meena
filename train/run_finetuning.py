@@ -264,7 +264,11 @@ def main():
   del checkpoint
 
   # optimizer = Adafactor(model.parameters())
-  optimizer = Adafactor(model.parameters(), scale_parameter=False, relative_step=False, warmup_init=False, lr=1e-5)
+  optimizer = Adafactor(model.parameters(),
+                        scale_parameter=False, # (default: True) if True, learning rate is scaled by root mean square of parameter
+                        relative_step=False, # (default: True) if True, time-dependent learning rate is computed
+                        warmup_init=False, # (default: False) time-dependent learning rate computation depends on whether warm-up initialization is being used
+                        lr=1e-3)
   # optimizer = AdamW(model.parameters(), lr=3e-4)
 
   if config.fp16:

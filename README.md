@@ -53,6 +53,18 @@ Pretrained on 34GB Korean corpus data.
 ## Fine-tuning
 Fine-tuned on 94.8MB Korean Conversation Data
 
+**Evaluation**
+
+|  epoch  |   loss   |  Perplexity  |
+|:-------:|----------|--------------|
+|    1    |  2.2878  |    11.0814   |
+|    2    |  2.2652  |    10.8460   |
+|    3    |  2.2489  |    10.6738   |
+|    4    |  2.2373  |    10.5701   |
+|    5    |  2.2280  |    10.4907   |
+
+
+
 ## Checkpoint
 ### 1. Pretrained Meena
 - it's preparing

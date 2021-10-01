@@ -10,7 +10,7 @@ def print_json_line_graph(json_path):
   json_data = json.load(f)
   lists = json_data.items()  # sorted by key, return a list of tuples
   len_total_step = len(lists)
-  num = 10
+  num = 1000
 
   lists = list(filter(lambda x: int(x[0]) % num==0, lists))
   x, y = zip(*lists)  # unpack a list of pairs into two tuples

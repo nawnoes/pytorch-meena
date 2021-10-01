@@ -3,7 +3,7 @@
   "data_path" :"../data/finetuning/" ,
   "checkpoint_path" : "../checkpoint",
   "cache_path" : "../cache",
-  "model_name": "komeena-base-finetuning",
+  "model_name": "komeena-base-finetuning-v2",
   "dim": 2560,
   "encoder_depth": 1,
   "decoder_depth": 9,
