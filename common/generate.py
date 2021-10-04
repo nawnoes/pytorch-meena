@@ -25,8 +25,9 @@ def random_sampling(predict, vocab, k=1024):
   return gen_word
 
 
-def top_p(logits, threshold=0.9, is_uniform_sample=False):
-  sorted_logits, sorted_indices = torch.sort(logits, descending=True)
+def top_p(logits, threshold=0.9, temperature=0.88, is_uniform_sample=False):
+  tmp_logits = logits/temperature
+  sorted_logits, sorted_indices = torch.sort(tmp_logits, descending=True)
   indexs = sorted_indices.tolist()
 
   sorted_softmax_logits = torch.softmax(sorted_logits, dim=-1)
