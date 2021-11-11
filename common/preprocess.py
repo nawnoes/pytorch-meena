@@ -55,6 +55,9 @@ def sns_conversation_data(file_path):
     "P06":"F",
     "P07":"G",
     "P08":"H",
+    "P09": "I",
+    "P10": "J",
+
   }
   with open(file_path,"r",encoding='utf-8') as json_file:
     json_data = json.load(json_file,strict=False)
@@ -82,9 +85,10 @@ def run_preprocess_sns_data(dir_path= '/Volumes/T7 Touch/NLP Data/korean_sns'):
   w_f = open(f'{processed_path}/korean_sns.txt','w',encoding='utf-8')
 
   for file in file_list:
+    print(f'process {origin_path}/{file}')
     datas = sns_conversation_data(f'{origin_path}/{file}')
     for data in datas:
-      w_f.write(data)
+      w_f.write(data+'\n')
     # w_f.write('\n')
 
   w_f.close()
