@@ -5,49 +5,7 @@ import random
 from transformers import BertTokenizer
 from torch.utils.data import Dataset
 from tqdm import tqdm
-
-
-class DatasetForMeena(Dataset):
-    def __init__(self, tokenizer, max_len, dir_path):
-        logging.info('Start pretraining data load!')
-        
-        self.tokenizer = tokenizer
-        self.max_len = max_len
-        self.docs = []
-        
-        # 파일 리스트
-        file_list = os.listdir(dir_path)
-        
-        # num_lines = sum(1 for line in open(path, 'r',encoding='utf-8'))
-        file_progress_bar = tqdm(file_list, position=0, leave=True, bar_format='{l_bar}{bar:10}{r_bar}')
-        for file_name in file_progress_bar:
-            path = f'{dir_path}/{file_name}'
-            data_file = open(path, 'r', encoding='utf-8')
-            for line in tqdm(data_file,
-                             desc='Data load for pretraining',
-                             position=1, leave=True):
-                line = line[:-1]
-                self.docs.append(line)
-        logging.info('Complete data load')
-    
-    def _tokenize_input_ids(self, input_ids: list, add_special_tokens: bool = False, pad_to_max_length: bool = True):
-        inputs = torch.tensor(
-            self.tokenizer.encode(input_ids, add_special_tokens=add_special_tokens, max_length=self.max_len,
-                                  pad_to_max_length=pad_to_max_length, return_tensors='pt', truncation=True))
-        return inputs
-    
-    def __len__(self):
-        return len(self.docs)
-    
-    def __getitem__(self, idx):
-        inputs = self._tokenize_input_ids(self.docs[idx], pad_to_max_length=True)
-        labels = inputs.clone()
-        
-        inputs = inputs.squeeze()
-        labels = labels.squeeze()
-        inputs_mask = inputs != 0
-        
-        return inputs, inputs_mask.unsqueeze(0), labels
+import copy
 
 class DatasetForSeq2seq(Dataset):
     def __init__(self, tokenizer, max_len, dir_path):
@@ -191,6 +149,116 @@ class DatasetForSeq2seqV2(Dataset):
         encoder_inputs_mask = encoder_input_ids != 0
     
         return encoder_input_ids, decoder_input_ids, encoder_inputs_mask.unsqueeze(0), labels
+
+
+class DatasetForSeq2seqConversation(Dataset):
+    def __init__(self, tokenizer, max_len, dir_path, threshold=0.5):
+        logging.info('Load Meena Seq2Seq Conversation Data')
+        self.tokenizer = tokenizer
+        self.max_len = max_len
+
+        self.source = []
+        self.target = []
+
+        self.threshold = threshold
+
+        file_list = os.listdir(dir_path)
+        # file_progress_bar = tqdm(file_list, position=0, leave=True, bar_format='{l_bar}{bar:10}{r_bar}')
+        for file_name in file_list:  # file_progress_bar:
+            path = f'{dir_path}/{file_name}'
+            total_file_len = file_len(path)
+            data_file = open(path, 'r', encoding='utf-8')
+
+            tmp_source = []
+            tmp_target = []
+            tmp_source_len = 0
+            tmp_target_len = 0
+
+            for line in tqdm(data_file,
+                             total=total_file_len,
+                             desc=f'Load {file_name}',
+                             position=0, leave=True):
+                line = line[:-1]
+                if line == '':
+                    tmp_source = []
+                    tmp_target = []
+                    tmp_source_len = 0
+                    tmp_target_len = 0
+                    continue
+
+                line_ids = self.tokenizer.encode(line, add_special_tokens=False, pad_to_max_length=False,
+                                                 max_length=max_len - 2, truncation=True)
+                line_ids += [self.tokenizer.sep_token_id]
+
+                if len(tmp_target) > 0: # 기존에 target 데이터가 있는 경우
+                    if tmp_target[-1][0:2] == line_ids[0:2]:
+                        # 화자가 같은 경우
+                        tmp_target.append(line_ids)
+                        tmp_target_len += len(line_ids)
+                    else:
+                        # 화자가 다른 경우
+                        # tmp_target 초기화
+                        tmp_value = copy.deepcopy(tmp_target)
+                        tmp_target = []
+                        tmp_target_len = 0
+
+                        tmp_target.append(line_ids)
+                        tmp_target_len += len(line_ids)
+                else: # target 데이터가 없는 경우
+                    tmp_target.append(line_ids)
+                    tmp_target_len += len(line_ids)
+                    continue
+                tmp_value_len = 0
+                for tmp in tmp_value:
+                    tmp_value_len += len(tmp)
+
+                tmp_value_len = min(tmp_value_len, max_len)
+                while tmp_value_len + tmp_source_len > max_len:
+                    pop_source = tmp_source.pop(0)
+                    tmp_source_len -= len(pop_source)
+                    del pop_source
+
+                for tmp in tmp_value:
+                    tmp_source.append(tmp)
+                    tmp_source_len += len(tmp)
+
+                if random.random() >= self.threshold:
+                    source, target = self.get_trainig_data(tmp_source, tmp_target)
+                    self.source.append(source)
+                    self.target.append(target)
+
+    def get_trainig_data(self, source, target):
+        if len(source) == 0 or len(target) == 0:
+            return
+        full_source = [self.tokenizer.cls_token_id]
+        full_target = [self.tokenizer.cls_token_id]
+        for line in source:
+            full_source += line
+        for line in target:
+            full_target += line
+        return full_source, full_target
+
+    def _tokenize_input_ids(self, input_ids: list, add_special_tokens: bool = False, pad_to_max_length: bool = True):
+        inputs = torch.tensor(
+            self.tokenizer.encode(input_ids, add_special_tokens=add_special_tokens, max_length=self.max_len,
+                                  pad_to_max_length=pad_to_max_length, return_tensors='pt', truncation=True))
+        return inputs
+
+    def __len__(self):
+        return len(self.source)
+
+    def __getitem__(self, idx):
+        encoder_input_ids = self._tokenize_input_ids(self.source[idx])
+        decoder_input_ids = self._tokenize_input_ids(self.target[idx])
+        labels = decoder_input_ids.clone()
+
+        encoder_input_ids = encoder_input_ids.squeeze()
+        decoder_input_ids = decoder_input_ids.squeeze()
+        labels = labels.squeeze()
+        encoder_inputs_mask = encoder_input_ids != 0
+
+        return encoder_input_ids, decoder_input_ids, encoder_inputs_mask.unsqueeze(0), labels
+
 
 def file_len(fname):
     with open(fname) as f:
