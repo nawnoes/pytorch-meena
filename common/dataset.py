@@ -152,7 +152,7 @@ class DatasetForSeq2seqV2(Dataset):
 
 
 class DatasetForSeq2seqConversation(Dataset):
-    def __init__(self, tokenizer, max_len, dir_path, threshold=0.5):
+    def __init__(self, tokenizer:BertTokenizer, max_len:int, dir_path:str, threshold=0.0):
         logging.info('Load Meena Seq2Seq Conversation Data')
         self.tokenizer = tokenizer
         self.max_len = max_len
@@ -186,15 +186,37 @@ class DatasetForSeq2seqConversation(Dataset):
                     tmp_target_len = 0
                     continue
 
-                line_ids = self.tokenizer.encode(line, add_special_tokens=False, pad_to_max_length=False,
-                                                 max_length=max_len - 2, truncation=True)
-                line_ids += [self.tokenizer.sep_token_id]
+                line_ids = self.tokenizer.encode(line, add_special_tokens=False, pad_to_max_length=False, max_length=max_len - 2, truncation=True)
+
 
                 if len(tmp_target) > 0: # 기존에 target 데이터가 있는 경우
                     if tmp_target[-1][0:2] == line_ids[0:2]:
                         # 화자가 같은 경우
-                        tmp_target.append(line_ids)
-                        tmp_target_len += len(line_ids)
+                        # 이전 source와 target 제거
+                        self.source.pop(-1)
+                        self.target.pop(-1)
+
+                        if tmp_target_len + len(line_ids) + 1 >= max_len - 2:
+                            while tmp_target_len + len(line_ids) + 1 >= max_len - 2:
+                                if len(tmp_target)>0:
+                                    pop_target = tmp_target.pop(0)
+                                    tmp_source.append(pop_target)
+                                    tmp_target_len -= len(pop_target)
+                                    tmp_source_len += len(pop_target)
+                                else:
+                                    diff = (len(line_ids)+1) - (max_len+2)
+                                    line_ids = line_ids[0:-diff]
+
+                            while tmp_source_len > max_len:
+                                pop_source = tmp_source.pop(0)
+                                tmp_source_len -= len(pop_source)
+                        if tmp_target != []:
+                            tmp_target[-1].append(self.tokenizer.unk_token_id)
+                            tmp_target.append(line_ids)
+                            tmp_target_len += len(line_ids)+1
+                        else:
+                            tmp_target.append(line_ids)
+                            tmp_target_len += len(line_ids)
                     else:
                         # 화자가 다른 경우
                         # tmp_target 초기화
@@ -208,21 +230,27 @@ class DatasetForSeq2seqConversation(Dataset):
                     tmp_target.append(line_ids)
                     tmp_target_len += len(line_ids)
                     continue
+
                 tmp_value_len = 0
                 for tmp in tmp_value:
                     tmp_value_len += len(tmp)
 
-                tmp_value_len = min(tmp_value_len, max_len)
-                while tmp_value_len + tmp_source_len > max_len:
+                # tmp_value_len = min(tmp_value_len, max_len)
+                while tmp_value_len + tmp_source_len > max_len-2:
                     pop_source = tmp_source.pop(0)
                     tmp_source_len -= len(pop_source)
                     del pop_source
 
-                for tmp in tmp_value:
+                for i, tmp in enumerate(tmp_value):
+                    if tmp_source != [] and i == 0:
+                        tmp_source[-1].append(self.tokenizer.sep_token_id)
+                        tmp_source_len += 1
                     tmp_source.append(tmp)
                     tmp_source_len += len(tmp)
+                tmp_value =[]
+                tmp_value_len =0
 
-                if random.random() >= self.threshold:
+                if self.threshold ==0.0 or self.threshold <= random.random():
                     source, target = self.get_trainig_data(tmp_source, tmp_target)
                     self.source.append(source)
                     self.target.append(target)
@@ -236,6 +264,8 @@ class DatasetForSeq2seqConversation(Dataset):
             full_source += line
         for line in target:
             full_target += line
+        full_source.append(self.tokenizer.sep_token_id)
+        full_target.append(self.tokenizer.sep_token_id)
         return full_source, full_target
 
     def _tokenize_input_ids(self, input_ids: list, add_special_tokens: bool = False, pad_to_max_length: bool = True):
@@ -336,10 +366,12 @@ if __name__ == '__main__':
     data_path = '../data/tmp/'
     tokenizer = BertTokenizer('../data/vocab-10K.txt', do_lower_case=False)
     # dataset = make_seq2seq_data(tokenizer, data_path, 128)
-    dataset = DatasetForSeq2seqV2(tokenizer,128, data_path)
-    
-    save_path ='../cache/train_data.pickle'
-    torch.save(dataset,save_path)
-    
-    a = torch.load(save_path)
+    # dataset = DatasetForSeq2seqV2(tokenizer,128, data_path)
+    dataset = DatasetForSeq2seqConversation(tokenizer, 128, data_path)
+
     print(dataset)
+    # save_path ='../cache/train_data.pickle'
+    # torch.save(dataset,save_path)
+    #
+    # a = torch.load(save_path)
+    # print(dataset)
