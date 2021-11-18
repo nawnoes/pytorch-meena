@@ -122,6 +122,10 @@ A : 비명 지르지 마ㅋㅋㅋㅋㅋ
 B : ㅇ0ㅇ 이전 제목이다
 ```
 
+
+## TODO
+- [ ] 데이터 추가 전처리
+
 ## Test
 Three type model tested 
 - ① Only Decoder Model: only transformer decoder(ex. GPT)

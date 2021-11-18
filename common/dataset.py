@@ -378,6 +378,14 @@ def meena_dataset(config, tokenizer):
     torch.save(dataset, cache_data_path) # 데이터 저장
 
     return dataset
+def save_sample_data(dataset,tokenizer):
+    max_len = len(dataset)
+    with open(f'{config.cache_path}/sampled_data.txt','w') as f:
+        for i in range(0,max_len,5000):
+            source = dataset.source[i]
+            target = dataset.target[i]
+            f.write(f'context: {tokenizer.decode(source)}\nanswer: {tokenizer.decode(target)}\n\n')
+
 
 if __name__ == '__main__':
     data_path = '../data/tmp/'
@@ -395,7 +403,8 @@ if __name__ == '__main__':
     config = ModelConfig(config_path=config_path).get_config()
     dataset = meena_dataset(config, tokenizer)
 
-    print(dataset)
+    save_sample_data(dataset, tokenizer)
+    # print(dataset)
     # save_path ='../cache/train_data.pickle'
     # torch.save(dataset,save_path)
     #
