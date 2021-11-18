@@ -6,6 +6,8 @@ from transformers import BertTokenizer
 from torch.utils.data import Dataset
 from tqdm import tqdm
 import copy
+from common.arg import ModelConfig
+
 
 class DatasetForSeq2seq(Dataset):
     def __init__(self, tokenizer, max_len, dir_path):
@@ -361,13 +363,37 @@ def save_train_data(outfile_writer, source, target):
     
     outfile_writer.write(f'{(full_source_str.strip())}\t{full_target_str.strip()}\n')
 
+def meena_dataset(config, tokenizer):
+  cache_data_path = f'{config.cache_path}/{config.model_name}.pickle'
+  cache_dir_path= os.path.dirname(cache_data_path)
+
+  if os.path.exists(cache_data_path): # 캐시 데이터가 존재하는 경우
+    dataset = torch.load(cache_data_path)
+    return dataset
+  else: # 캐시 데이터가 없는 경우
+    if not os.path.exists(cache_dir_path):
+      os.makedirs(cache_dir_path) # 캐시 디렉토리 경로 생성
+
+    dataset = DatasetForSeq2seqConversation(tokenizer, config.max_seq_len, config.data_path)
+    torch.save(dataset, cache_data_path) # 데이터 저장
+
+    return dataset
 
 if __name__ == '__main__':
     data_path = '../data/tmp/'
     tokenizer = BertTokenizer('../data/vocab-10K.txt', do_lower_case=False)
     # dataset = make_seq2seq_data(tokenizer, data_path, 128)
     # dataset = DatasetForSeq2seqV2(tokenizer,128, data_path)
-    dataset = DatasetForSeq2seqConversation(tokenizer, 128, data_path)
+    # dataset = DatasetForSeq2seqConversation(tokenizer, 128, data_path)
+
+    base_path = '..'
+
+    log_dir = f'{base_path}/logs'
+    config_path = f'{base_path}/config/meena-config.json'
+
+    # Config
+    config = ModelConfig(config_path=config_path).get_config()
+    dataset = meena_dataset(config, tokenizer)
 
     print(dataset)
     # save_path ='../cache/train_data.pickle'
