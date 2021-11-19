@@ -1,6 +1,7 @@
-import pandas as pd
+# import pandas as pd
 import os
 import json
+import re
 
 def add_turn_info(origin_path, processed_path):
   file_name = 'wellness.txt'
@@ -93,12 +94,35 @@ def run_preprocess_sns_data(dir_path= '/Volumes/T7 Touch/NLP Data/korean_sns'):
 
   w_f.close()
 
+def find_system_token(file_path = "../data/plain/korean_sns.txt"):
+  system_token = set([])
+  pattern = re.compile("#@[ㄱ-ㅎ|가-힣]*#[ㄱ-ㅎ|가-힣]*#|#@[ㄱ-ㅎ|가-힣]*#")
+  file = open(file_path,'r')
+  while True:
+    line = file.readline()
+    if line is None:
+      break
+
+    results = pattern.findall(line)
+    set_results = set(results)
+    diff_set = set_results - system_token
+    if len(diff_set) > 0:
+      for item in diff_set:
+        system_token.add(item)
+
+  print(system_token)
+  return system_token
+
+
+
+
 if __name__=='__main__':
   data_path = '/Volumes/T7 Touch/NLP Data/korean_sns/origin/미용과건강.json'
 
   # data = sns_conversation_data(data_path)
-  run_preprocess_sns_data()
+  # run_preprocess_sns_data()
   # print(data)
+  find_system_token()
 
 
 

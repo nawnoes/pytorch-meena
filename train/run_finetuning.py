@@ -20,7 +20,7 @@ import logging
 from datetime import datetime
 from model.meena import Meena
 from common.arg import ModelConfig
-from common.dataset import DatasetForSeq2seqV2
+from common.dataset import DatasetForSeq2seqV2, DatasetForSeq2seqConversation
 
 class MeenaTrainer(object):
   def __init__(self,
@@ -208,7 +208,7 @@ class MeenaTrainer(object):
     }, f'{self.checkpoint_path}/{self.model_name}.pth')
     model.cuda()
 
-def meena_dataset(config, tokenizer):
+def meena_dataset(config, tokenizer, finetune_dataset):
   cache_data_path = f'{config.cache_path}/{config.model_name}.pickle'
   cache_dir_path= os.path.dirname(cache_data_path)
 
@@ -219,7 +219,7 @@ def meena_dataset(config, tokenizer):
     if not os.path.exists(cache_dir_path):
       os.makedirs(cache_dir_path) # 캐시 디렉토리 경로 생성
 
-    dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path,threshold=0.0)
+    dataset = finetune_dataset(tokenizer, config.max_seq_len, config.data_path,threshold=0.0)
     torch.save(dataset, cache_data_path) # 데이터 저장
 
     return dataset
@@ -231,7 +231,7 @@ def main():
   base_path = '..'
 
   log_dir = f'{base_path}/logs'
-  config_path = f'{base_path}/config/meena-finetuning-config.json'
+  config_path = f'{base_path}/config/meena-finetuning-config-v3.json'
   device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 
   # Config
@@ -242,7 +242,7 @@ def main():
 
   # Dataset
   # dataset = DatasetForSeq2seqV2(tokenizer, config.max_seq_len, config.data_path)
-  dataset = meena_dataset(config,tokenizer)
+  dataset = meena_dataset(config,tokenizer, DatasetForSeq2seqConversation)
 
   # Meena Model
   model = Meena(
