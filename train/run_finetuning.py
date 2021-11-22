@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
 from transformers import BertTokenizer
 from fairseq.optim.adafactor import Adafactor
-from apex import amp
+# from apex import amp
 
 import os
 import json
@@ -227,7 +227,7 @@ def meena_dataset(config, tokenizer, finetune_dataset):
 
 def main():
   torch.manual_seed(9)
-  torch.cuda.set_device(1)
+  # torch.cuda.set_device(1)
   base_path = '..'
 
   log_dir = f'{base_path}/logs'
