@@ -15,6 +15,6 @@
   "log_steps" : 1,
   "ckpt_steps" : 20000,
   "gradient_accumulation_steps": 512,
-  "fp16": false,
+  "fp16": true,
   "fp16_opt_level": "O2"
 }

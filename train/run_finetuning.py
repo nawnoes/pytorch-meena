@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
 from transformers import BertTokenizer
 from fairseq.optim.adafactor import Adafactor
-# from apex import amp
+from apex import amp
 
 import os
 import json
@@ -227,7 +227,7 @@ def meena_dataset(config, tokenizer, finetune_dataset):
 
 def main():
   torch.manual_seed(9)
-  # torch.cuda.set_device(1)
+  torch.cuda.set_device(1)
   base_path = '..'
 
   log_dir = f'{base_path}/logs'
@@ -268,7 +268,7 @@ def main():
                         scale_parameter=False, # (default: True) if True, learning rate is scaled by root mean square of parameter
                         relative_step=False, # (default: True) if True, time-dependent learning rate is computed
                         warmup_init=False, # (default: False) time-dependent learning rate computation depends on whether warm-up initialization is being used
-                        lr=1e-3)
+                        lr=5e-5)
   # optimizer = AdamW(model.parameters(), lr=3e-4)
 
   if config.fp16:
