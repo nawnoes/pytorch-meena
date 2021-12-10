@@ -2,3 +2,4 @@ torch
 transformers
 fairseq
 apex
+streamlit
