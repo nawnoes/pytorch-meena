@@ -1,12 +1,29 @@
-# Goolge Meena - Pytorch 
-Implementation of Google Meena for open domain conversation using pytorch. 
-The model in this repo use original Transformer seq2seq model (not Evolved Transformer).
+# Meena - Pytorch 
+Implementation of Meena for open domain conversation using pytorch. 
+The model in this repo use vanilla Transformer seq2seq model (not Evolved Transformer).
 The model consists of 1 encoder and 9 decoder.  
 
 ## Model
 ### Meena
 Transformer seq2seq model.
 ![](./images/meena_architecture.png)
+
+### Model Summary
+- Total Prameters: **1.1B**(1,100,293,120)
+```
+-----------------------------------------------------------------------
+      Layer (type)        Output Shape         Param #     Tr. Param #
+=======================================================================
+    MeenaEncoder-1      [1, 128, 2560]     104,604,160     104,604,160
+    MeenaDecoder-2      [1, 128, 2560]     970,083,840     970,083,840
+       LayerNorm-3      [1, 128, 2560]           5,120           5,120
+          Linear-4     [1, 128, 10000]      25,600,000      25,600,000
+=======================================================================
+Total params: 1,100,293,120
+Trainable params: 1,100,293,120
+Non-trainable params: 0
+-----------------------------------------------------------------------
+```
 
 
 ## Vocab

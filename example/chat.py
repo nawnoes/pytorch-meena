@@ -6,6 +6,7 @@ from common.arg import ModelConfig
 from model.meena import Meena
 from transformers import BertTokenizer
 from common.generate import top_p, top_k,sample_and_rank
+import time
 
 
 def get_encoder_input(tokenizer:BertTokenizer, input_str:list, config: ModelConfig):
@@ -52,21 +53,34 @@ def make_new_source_input(tokenizer:BertTokenizer, target_input_ids: torch.Tenso
 
     return torch.tensor(source_input_ids), source_input_str
 
+def print_output(out_ids, tokenizer:BertTokenizer):
+    out_str = tokenizer.decode(out_ids)
+    turn = 'B :'
+    out_str = f'Meena: {out_str[4:]}'
+    out_list = out_str.split(turn)
+
+    if len(out_list)==1:
+        print(out_str)
+    elif len(out_list)>1:
+        for item in out_list:
+            print(item)
+            time.sleep(1.1)
+
 def main():
 
     config_path = '../config/meena-config.json'
-    checkpoint_path = '../checkpoint/komeena-base-finetuning-2epoch.pth'
+    checkpoint_path = '../checkpoint/komeena-base-finetuning-v3.pth'
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     config = ModelConfig(config_path).get_config()
 
-    tokenizer = BertTokenizer(config.vocab_path, do_lower_case= False)
+    tokenizer = BertTokenizer(config.vocab_path, do_lower_case=False)
 
     model = Meena(vocab_size=tokenizer.vocab_size,
-                  dim= config.dim,
-                  encoder_depth= config.encoder_depth,
-                  decoder_depth= config.decoder_depth,
-                  max_seq_len= config.max_seq_len,
+                  dim=config.dim,
+                  encoder_depth=config.encoder_depth,
+                  decoder_depth=config.decoder_depth,
+                  max_seq_len=config.max_seq_len,
                   head_num=config.n_head,
                   dropout=config.dropout_prob)
 
@@ -77,15 +91,14 @@ def main():
     model.eval()
 
     # Meta data for conversation
-    meta_data ='[CLS] 여가와 오락 (유흥, 취미, 관심사, 휴일 활동, 동아리, 동호회) [SEP] '
-    meta_data +='A=20대 여성 [SEP] '
-    meta_data +='B=20대 여성 [SEP] '
+    meta_data = '[CLS] '
 
     # Start of chat with Meena
     target_str = '[CLS] B: '
-    print('😁 고미나에게 말을 건네세요!')
+    print('Meena에게 말을 건네세요: ')
 
     count = 0
+    min_len = 15
 
     while True:
         user_query = input('A : ')
@@ -94,11 +107,13 @@ def main():
         if count == 0:
             source_str = meta_data + user_query + ' [SEP] '
         else:
-            user_query_ids = tokenizer.encode(user_query, add_special_tokens=False, max_length=config.max_seq_len, truncation=True)
+            user_query_ids = tokenizer.encode(user_query, add_special_tokens=False, max_length=config.max_seq_len,
+                                              truncation=True)
             user_query_ids.append(tokenizer.sep_token_id)
             user_query_ids = torch.tensor(user_query_ids)
             _, source_str = make_new_source_input(tokenizer, user_query_ids.unsqueeze(0), source_input_ids)
-        source_input_ids, source_input_mask = get_encoder_input(tokenizer=tokenizer, input_str=source_str, config=config)
+        source_input_ids, source_input_mask = get_encoder_input(tokenizer=tokenizer, input_str=source_str,
+                                                                config=config)
         target_input_ids = get_decoder_input(tokenizer=tokenizer, input_str=target_str, config=config)
 
         # Sentence completed normally
@@ -106,15 +121,25 @@ def main():
 
         for _ in range(config.max_seq_len):
             logit, _ = model(source_input_ids, target_input_ids, source_input_mask)
-            # sampled_word = get_next_token(logit, top_p)
-            sampled_word = get_next_token(logit, sample_and_rank, N=20, temperature=0.88, is_uniform_sample=False)
+            sampled_word = get_next_token(logit, top_p)
+            # sampled_word = get_next_token(logit, sample_and_rank, N=20, temperature=0.88, is_uniform_sample=False)
 
             if sampled_word == tokenizer.sep_token_id:
-                print(f'{tokenizer.decode(target_input_ids[0],skip_special_tokens=True)}')
-                source_input_ids, source_str = make_new_source_input(tokenizer, target_input_ids, source_input_ids)
-                target_str = '[CLS] B: '
-                is_complete = True
-                break
+                if len(target_input_ids[0]) > min_len:
+                    # print(f'{tokenizer.decode(target_input_ids[0], skip_special_tokens=True)}')
+                    print_output(target_input_ids[0],tokenizer)
+                    source_input_ids, source_str = make_new_source_input(tokenizer, target_input_ids, source_input_ids)
+                    target_str = '[CLS] B: '
+                    is_complete = True
+                    break
+                else:
+                    addtional_target_str = ' [UNK] B: '
+                    addtional_target_ids = tokenizer.encode(addtional_target_str, add_special_tokens=False)
+
+                    target_input_ids = target_input_ids.tolist()
+                    target_input_ids[0].append(addtional_target_ids[0])
+                    target_input_ids = torch.tensor(target_input_ids)
+
             else:
                 target_input_ids = target_input_ids.tolist()
                 target_input_ids[0].append(sampled_word)
@@ -125,6 +150,7 @@ def main():
             target_str = '[CLS] B: '
 
         count += 1
+
 
 
 if __name__=='__main__':
