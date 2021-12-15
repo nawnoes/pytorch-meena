@@ -1,10 +1,9 @@
-# Meena - Pytorch 
+# Meena 
 Implementation of Meena for open domain conversation using pytorch. 
-The model in this repo use vanilla Transformer seq2seq model (not Evolved Transformer).
+The model in this repository use vanilla Transformer seq2seq model (not Evolved Transformer).
 The model consists of 1 encoder and 9 decoder.  
 
 ## Model
-### Meena
 Transformer seq2seq model.
 ![](./images/meena_architecture.png)
 
@@ -27,7 +26,8 @@ Non-trainable params: 0
 
 
 ## Vocab
-This repo use **10K Wordpiece BPE**. Original Meena use sentencepiece library. Meena team use a vocabulary of **8K BPE**, which they found in early experiments to be sufficient for generating specific response. 
+This repository use **10K Wordpiece BPE**.
+> Original Meena use sentencepiece library. Meena team use a vocabulary of **8K BPE**, which they found in early experiments to be sufficient for generating specific response. 
 
 
 ## Data

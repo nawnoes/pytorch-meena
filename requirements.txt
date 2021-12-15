@@ -3,3 +3,4 @@ transformers
 fairseq
 apex
 streamlit
+torchinfo

@@ -3,6 +3,13 @@ from model.meena import Meena
 from common.arg import ModelConfig
 from transformers import BertTokenizer
 import pytorch_model_summary as pms
+from torchinfo import summary
+
+def print_pmx(model, *args):
+    pms.summary(model, *args, print_summary=True)
+
+def print_torchinfo(model,*args):
+    summary(model, depth=1, input_data=[*args])
 
 base_path = '..'
 config_path = f'{base_path}/config/meena-finetuning-config-v3.json'
@@ -28,9 +35,11 @@ encoder_input_ids = torch.randint(0,10000,(1,128))
 decoder_input_ids = torch.randint(0,10000,(1,128))
 encoder_input_mask = torch.tensor([True for _ in range(128)])
 
-# Summary
-pms.summary(model, encoder_input_ids,decoder_input_ids, encoder_input_mask, print_summary=True)
+# PMS Summary
+# print_pmx(model, encoder_input_ids,decoder_input_ids, encoder_input_mask)
 
+# torchinfo
+print_torchinfo(model, encoder_input_ids,decoder_input_ids, encoder_input_mask)
 """
 print in console
 -----------------------------------------------------------------------
