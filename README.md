@@ -1,7 +1,6 @@
 # Meena 
-Implementation of Meena for open domain conversation using pytorch. 
-The model in this repository use vanilla Transformer seq2seq model (not Evolved Transformer).
-The model consists of 1 encoder and 9 decoder.  
+Implementation of Meena for open domain conversation using pytorch.  
+The model in this repository use vanilla Transformer seq2seq model (not Evolved Transformer). The model consists of 1 encoder and 9 decoder.  
 
 ## Model
 Transformer seq2seq model.
@@ -57,17 +56,16 @@ Pretrained on 34GB Korean corpus data.
 ```
 
 ## Fine-tuning
-Fine-tuned on 94.8MB Korean Conversation Data
+Fine-tuned on 500MB Korean SNS data
 
 **Evaluation**
 
-|  epoch  |   loss   |  Perplexity  |
-|:-------:|----------|--------------|
-|    1    |  2.2878  |    11.0814   |
-|    2    |  2.2652  |    10.8460   |
-|    3    |  2.2489  |    10.6738   |
-|    4    |  2.2373  |    10.5701   |
-|    5    |  2.2280  |    10.4907   |
+|  epoch  |  loss  | Perplexity |
+|:-------:|--------|------------|
+|    1    |  2.40  |    11.65   |
+|    2    |  2.36  |    11.16   |
+|    3    |  2.34  |    10.92   |
+|    4    |  2.32  |    10.77   |
 
 
 
@@ -80,60 +78,71 @@ Fine-tuned on 94.8MB Korean Conversation Data
 ## Device
 - V100, 16G Memory
 - Cuda 10.1, Driver 418.67
-```
-+-----------------------------------------------------------------------------+
-| NVIDIA-SMI 418.67       Driver Version: 418.67       CUDA Version: 10.1     |
-|-------------------------------+----------------------+----------------------+
-| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
-|===============================+======================+======================|
-|   0  Tesla V100-PCIE...  On   | 00000000:00:06.0 Off |                    0 |
-| N/A   43C    P0   151W / 250W |  15590MiB / 16130MiB |     63%      Default |
-+-------------------------------+----------------------+----------------------+
-```
 
 ## Chat Example
-### Test Pretrained Model
-Model prtrained using kowiki & Messager data. 
-- 3 epoch
-- ./example/chat.py
-#### Meta Data
-  ```py
-    meta_data ='[CLS] 여가와 오락 (유흥, 취미, 관심사, 휴일 활동, 동아리, 동호회) [SEP] '
-    meta_data +='A=20대 여성 [SEP] '
-    meta_data +='B=20대 여성 [SEP] '
-  ```
+- Top-p sampling (threshold=0.9, min_len=15, temperature = 0.9)
+### example 1
+```
 #### Example
-- A: User
-- B: KoMeena
-```txt
-😁 고미나에게 말을 건네세요!
-A : 날도 더운데 영화나 보러가자ㅋㅋ
-B : 어디에갈까
-A : cgv로 갈까??
-B : 아님 지나?
-A : 지나는 뭔데
-B : 1986년에 발매된 롤플레잉 비디오 게임이다.
-A : 으음 영화는 없니
-B : 영화는 대한민국의 영화 영화, 드라마, 애니메이터 등은 배우 양성으로 듣고 있지만, 주말에 그녀는 대부분이 영화를 좋아한다.
-A : 위키스러운 말을 하는구나
-B : 2011년 하반기의 클럽 퀸 엘리자베스 2세 시기이다.
-A : 맥락도 없구
-B : 맥락이 무명이여치지
-A : 배고프다 이눔아
-B :
-A : 왜 말 없냐
-B : 으ㅓ으으으으으으으!!!!!!! ~!
-A : 비명 지르지 마ㅋㅋㅋㅋㅋ
-B : ㅇ0ㅇ 이전 제목이다
+Meena에게 말을 건네세요: 
+User : 오늘은 날이 좋아서 밖에 나가고 싶다
+Meena:
+ ㅋㅋㅋㅋㅋㅋㅋㅋ
+ 기운내라 ㅋㅋㅋ
+User : 너는 뭐하고 있니
+Meena:
+ 유튜브보고있어
+ 지금
+ 티비보면서
+User : 티비도 보고 유튜브도 보다니 대단하네
+Meena:
+ 어 구독자
+ 천만은 못 넘네
+ 삼성화재 - 케티 간 거라 헷갈린다..
+User : 지금 몇시야?
+Meena:
+ 지금
+ < 사진 >
+ 이거 하고이쓰게
+ < 이름 > 안뇽
+```
+### example 2
+```
+Meena에게 말을 건네세요: 
+User : 나 최근에 제주도로 여행 갔다 왔는데 좋더라
+Meena:
+ 아 난 좋아
+ 일단은 시골 의사이신 분들 만나는 거 재밌었음
+ 나도 그것도 꽂혀서
+ 간거같음
+User : 시골 의사 분들이랑 만나면 뭘하는데?
+Meena:
+ 집에서 쉬고 싶어
+ 이제 막 시작해서...
+User : 그래그래.. 요즘 여행 갈만한데 없나
+Meena:
+ 항공권이 지금 40만원대야요 ㅈㅁㅌ
+User : 어우 돈 꽤나 많이 들겠네
+Meena:
+ 근데 사실 나는 강도가 약해서
+ 토할거같아
 ```
 
-
-## TODO
-- [ ] 데이터 추가 전처리
-
-## Test
-Three type model tested 
-- ① Only Decoder Model: only transformer decoder(ex. GPT)
-- ② Seq2Seq Model: Seq2seq model like original transformer model
-- ③ Stack Model: Stack 1 Encoder + 12 Decoder
+### example 3
+```
+Meena에게 말을 건네세요: 
+User : 요즘 친구한테 안좋은 일이 있대
+Meena:
+ 어떤?
+ 입대에 대한?
+ 어제도 말하고?
+User : 군대 말고 여자친구랑 안좋은가봐
+Meena:
+ 군대ㅋㅋㅋ아냐
+ 좋기는한거갘은데
+ 흠
+ 동시에 깊이 생각못할듯
+User : 어떻게 위로해주는게 좋으려나?
+Meena:
+ 우선 시작을 해봐야할것 같아 부족할것 같아서
+```
