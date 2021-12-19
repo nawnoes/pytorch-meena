@@ -27,7 +27,7 @@ Non-trainable params: 0
 
 ## Vocab
 This repository use **10K Wordpiece BPE**.
-> Original Meena use sentencepiece library. Meena team use a vocabulary of **8K BPE**, which they found in early experiments to be sufficient for generating specific response. 
+> Original Meena use sentencepiece library. Meena team use a vocabulary of 8K BPE because they found in early experiments to be sufficient for generating specific response. 
 
 
 ## Data
@@ -38,19 +38,8 @@ This repository use **10K Wordpiece BPE**.
 - Kowiki(634MB) + Messanger data(63MB)
 
 **Conversation Data**
+- Korean SNS data (500MB)
 
-[comment]: <> (- [[AI Hub] Free conversation voice &#40;normal men and women&#41;]&#40;https://aihub.or.kr/aidata/30703&#41;)
-
-[comment]: <> (- [[AI Hub] Free conversation voice &#40;Children&#41;]&#40;https://aihub.or.kr/aidata/30705&#41;)
-
-[comment]: <> (- [[AI Hub] Free conversation voice &#40;elderly men and women&#41;]&#40;https://aihub.or.kr/aidata/30704&#41;)
-
-[comment]: <> (- [[AI Hub] Korean conversation]&#40;https://aihub.or.kr/aidata/85&#41;)
-
-[comment]: <> (- [[AI Hub] In-vehicle conversation and command voice]&#40;https://aihub.or.kr/aidata/34177&#41;)
-- [[AI Hub] Emotional conversation corpus](https://aihub.or.kr/aidata/7978)
-- [[AI Hub] KETI, Korean conversation dataset](https://aihub.or.kr/opendata/keti-data/recognition-laguage/KETI-02-011)
-- [[AI Hub] KETI, A one-shot conversation dataset with Korean emotion information](https://aihub.or.kr/opendata/keti-data/recognition-laguage/KETI-02-009)
 ## Pretraining
 Pretrained on 34GB Korean corpus data. 
 ### Train Loss
