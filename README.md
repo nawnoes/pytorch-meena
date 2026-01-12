@@ -67,82 +67,54 @@ Fine-tuned on 500MB Korean SNS data
 |    3    |  2.34  |    10.92   |
 |    4    |  2.32  |    10.77   |
 
-
-
-## Checkpoint
-### 1. Pretrained Meena
-- TBD
-### 2. Fine-tuned Meena
-- TBD
-
 ## Device
 - V100, 16G Memory
 - Cuda 10.1, Driver 418.67
 
-## Chat Example
-- Top-p sampling (threshold=0.9, min_len=15, temperature = 0.9)
-### example 1
-```
-#### Example
-Meena에게 말을 건네세요: 
-User : 오늘은 날이 좋아서 밖에 나가고 싶다
-Meena:
- ㅋㅋㅋㅋㅋㅋㅋㅋ
- 기운내라 ㅋㅋㅋ
-User : 너는 뭐하고 있니
-Meena:
- 유튜브보고있어
- 지금
- 티비보면서
-User : 티비도 보고 유튜브도 보다니 대단하네
-Meena:
- 어 구독자
- 천만은 못 넘네
- 삼성화재 - 케티 간 거라 헷갈린다..
-User : 지금 몇시야?
-Meena:
- 지금
- < 사진 >
- 이거 하고이쓰게
- < 이름 > 안뇽
-```
-### example 2
-```
-Meena에게 말을 건네세요: 
-User : 나 최근에 제주도로 여행 갔다 왔는데 좋더라
-Meena:
- 아 난 좋아
- 일단은 시골 의사이신 분들 만나는 거 재밌었음
- 나도 그것도 꽂혀서
- 간거같음
-User : 시골 의사 분들이랑 만나면 뭘하는데?
-Meena:
- 집에서 쉬고 싶어
- 이제 막 시작해서...
-User : 그래그래.. 요즘 여행 갈만한데 없나
-Meena:
- 항공권이 지금 40만원대야요 ㅈㅁㅌ
-User : 어우 돈 꽤나 많이 들겠네
-Meena:
- 근데 사실 나는 강도가 약해서
- 토할거같아
+## Configuration (snapshot)
+
+Main config file:
+
+- `config/meena-config.json`
+
+Key parameters in the default config:
+
+- `dim=2560`, `n_head=32`, `max_seq_len=128`
+- `encoder_depth=1`, `decoder_depth=9`
+- `vocab_path=../data/vocab-10K.txt` (10K WordPiece vocab)
+- fp16 training enabled via Apex AMP (`fp16=true`, `fp16_opt_level=O2`)
+
+## How to run
+
+### Chat / inference
+
+Run an interactive chat loop:
+
+```bash
+python example/chat.py
 ```
 
-### example 3
-```
-Meena에게 말을 건네세요: 
-User : 요즘 친구한테 안좋은 일이 있대
-Meena:
- 어떤?
- 입대에 대한?
- 어제도 말하고?
-User : 군대 말고 여자친구랑 안좋은가봐
-Meena:
- 군대ㅋㅋㅋ아냐
- 좋기는한거갘은데
- 흠
- 동시에 깊이 생각못할듯
-User : 어떻게 위로해주는게 좋으려나?
-Meena:
- 우선 시작을 해봐야할것 같아 부족할것 같아서
-```
+The script loads:
+
+- config: `config/meena-config.json`
+- a checkpoint path set inside `example/chat.py` (`checkpoint_path = ...`)
+
+Decoding:
+
+- top-p (nucleus) sampling is used by default (`common/generate.py`).
+
+### Training (best-effort)
+
+- Pretraining: `train/run_pretraining.py`
+- Fine-tuning: `train/run_finetuning.py`
+
+These scripts are written as research code and may require path edits depending on your local data layout.
+
+## Data format notes (best-effort)
+
+The dataset loaders under `common/dataset.py` expect a directory of text files.
+Conversation files are typically structured as:
+
+- one utterance per line
+- blank lines separating conversations
+- speaker prefixes like `A : ...` / `B : ...` are commonly used in this repo (see `example/chat.py`)
