@@ -1,13 +1,14 @@
-# Meena 
-Implementation of Meena for open domain conversation using pytorch.  
-The model in this repository use vanilla Transformer seq2seq model (not Evolved Transformer). The model consists of 1 encoder and 9 decoder.  
+# Meena (PyTorch)
+
+An open-domain Korean chatbot project inspired by **Meena** (seq2seq dialogue model), implemented in **PyTorch**.
+
+Note: this repository uses a **vanilla Transformer seq2seq** architecture (not the “Evolved Transformer” used in the original Meena paper). The default configuration uses **1 encoder layer + 9 decoder layers**.
 
 ## Model
 Transformer seq2seq model.
-![](./images/meena_architecture.png)
 
 ### Model Summary
-- Total Prameters: **1.1B**(1,100,293,120)
+- Total Parameters: **1.1B** (1,100,293,120)
 ```
 -----------------------------------------------------------------------
       Layer (type)        Output Shape         Param #     Tr. Param #
@@ -25,15 +26,16 @@ Non-trainable params: 0
 
 
 ## Vocab
-This repository use **10K Wordpiece BPE**.
-> Original Meena use sentencepiece library. Meena team use a vocabulary of 8K BPE because they found in early experiments to be sufficient for generating specific response. 
+This repository uses a **10K WordPiece (BPE-family)** vocabulary.
+
+The original Meena paper used SentencePiece with an 8K BPE vocabulary; this project uses WordPiece as an implementation choice.
 
 
 ## Data
 **Pretraining Data**  
 - 34GB Korean corpus data 
 
-**Test Pretrainig Data**  
+**Test Pretraining Data**  
 - Kowiki(634MB) + Messanger data(63MB)
 
 **Conversation Data**
@@ -44,8 +46,6 @@ Pretrained on 34GB Korean corpus data.
 ### Train Loss
 - epoch: 1
 - step: 2250000
-
-![](./images/meena_pretrain_losses.png)
 
 ### Evaluation
 - Total eval loss: 2.2944
@@ -71,9 +71,9 @@ Fine-tuned on 500MB Korean SNS data
 
 ## Checkpoint
 ### 1. Pretrained Meena
-- it's preparing
+- TBD
 ### 2. Fine-tuned Meena
-- it's preparing
+- TBD
 
 ## Device
 - V100, 16G Memory
